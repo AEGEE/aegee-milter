@@ -1,0 +1,173 @@
+diff -r sendmail-8.14.3/include/libmilter/mfapi.h dist/sendmail-8.14.3/include/libmilter/mfapi.h
+420,426d419
+< **  Alternatively, smfi_setreplies is used for commands, that need multiple 
+< **  reply values. Currently applicatable only when PRDR is used.
+< */
+< 
+< LIBMILTER_API int smfi_setreplies __P((SMFICTX *, char **, char **, char**));
+< 
+< /*
+diff -r sendmail-8.14.3/libmilter/engine.c dist/sendmail-8.14.3/libmilter/engine.c
+660,661c660
+< 		     (r == SMFIS_REJECT && *ctx->ctx_reply == '5') ||
+< 		     *ctx->ctx_reply == '3'))
+---
+> 		     (r == SMFIS_REJECT && *ctx->ctx_reply == '5')))
+diff -r sendmail-8.14.3/libmilter/smfi.c dist/sendmail-8.14.3/libmilter/smfi.c
+620,696d619
+< /*
+< **  SMFI_SETREPLIES -- set multi replies codes for the next reply to the MTA 
+< **    (useful with PRDR)
+< **
+< **      Parameters:
+< **              ctx -- Opaque context structure
+< **              rcodes -- null terminated array of reply codes
+< **              xcodes -- array of DSN
+< **              txt -- array of reply strings, \r\n starts a new line
+< **
+< **      Returns:
+< **              MI_SUCCESS/MI_FAILURE
+< */
+< int
+< #if SM_VA_STD
+< smfi_setreplies(SMFICTX *ctx, char** rcodes, char** xcodes, char** text)
+< #else /* SM_VA_STD */
+< smfi_setreplies(ctx, rcode, xcode, text)
+< 	SMFICTX *ctx;
+< 	char** rcodes;
+<         char** xcodes;
+<         char** text;
+< #endif /* SM_VA_STD */
+< {
+<   size_t len = 0;
+<   char  *j, *temp;
+<   //put the resulting string in ctx->ctx_reply and return MI_SUCCESS;
+<   int i = 0, this_line;
+<   while (rcodes[i] != NULL) {
+<     this_line = strlen(rcodes[i]) + 3;//2 = \r\n, 1 for ' '
+<     if (xcodes[i]) this_line+= strlen(xcodes[i])+1;
+<     if (text[i++] == NULL) {
+<       len += this_line + 6;
+<       continue;
+<     }
+<     j = text[i-1];
+<     temp = j;
+<     while (j = strchr(temp, '\r')) {
+<       len += this_line + j - temp;
+<       temp = j+2;
+<     }
+<     len += this_line + strlen(temp);
+<   }
+<   i = 0;
+<   char *buf = malloc(len);
+<   if (buf == NULL)
+<     return MI_FAILURE;		/* oops */
+<   *buf = '\0';
+<   while (rcodes[i] != NULL) {
+<     if (text[i] == NULL) {
+<       sm_strlcat(buf, rcodes[i], len);
+<       if (xcodes[i] != NULL)
+< 	sm_strlcat2(buf, " ", xcodes[i], len);;
+<       sm_strlcat(buf, " OK\r\n", len);
+<       i++;
+<       continue;
+<     }
+<     temp = text[i];
+<     while( j = strchr(temp, '\r')) {
+<       *j = '\0';
+<       sm_strlcat2(buf, rcodes[i], "-", len);
+<       if (xcodes[i])
+< 	sm_strlcat2(buf, xcodes[i], " ", len);
+<       sm_strlcat2(buf, temp, "\r\n", len);
+<       temp = j+2;
+<     }
+<     sm_strlcat2(buf, rcodes[i], " ", len);
+<     if (xcodes[i])
+<       sm_strlcat2(buf, xcodes[i], " ", len);
+<     sm_strlcat2(buf, temp, "\r\n", len);
+<     i++;
+<   }
+<   if (ctx->ctx_reply != NULL)
+<     free(ctx->ctx_reply);
+<   ctx->ctx_reply = buf;
+<   return MI_SUCCESS;
+< }
+diff -r sendmail-8.14.3/sendmail/milter.c dist/sendmail-8.14.3/sendmail/milter.c
+135c135
+< 	    (response[0] != '4' && response[0] != '5' && response[0] != '3') || \
+---
+> 	    (response[0] != '4' && response[0] != '5') || \
+2106,2115c2106,2108
+< 		  if (response[0] != '3') {
+< 		    sm_syslog(LOG_INFO, e->e_id,
+< 			      "milter=%s, action=%s, reject=%s",
+< 			      m->mf_name, action, response);
+< 		  } else {
+< 		    sm_syslog(LOG_INFO, e->e_id,
+< 			      "milter=%s, action=%s, prdr=%s",
+< 			      m->mf_name, action, response);
+< 		    //*state = SMFIR_CONTINUE;
+< 		  }
+---
+> 			sm_syslog(LOG_INFO, e->e_id,
+> 				  "milter=%s, action=%s, reject=%s",
+> 				  m->mf_name, action, response);
+4404,4405d4396
+< 			    *state = rcmd;
+< 			    if (response[0] != '3') {
+4407,4410d4397
+< 			    } else {
+< 			      MILTER_CHECK_REPLYCODE(response);
+< 			      //*state = SMFIR_ACCEPT;
+< 			    }
+4412d4398
+< 				  if (response[0] != '3')
+4415,4417c4401
+< 				  else 
+< 					sm_syslog(LOG_INFO, e->e_id, "milter=%s, prdr=%s",
+< 						  m->mf_name, response);
+---
+> 				*state = rcmd;
+diff -r sendmail-8.14.3/sendmail/srvrsmtp.c dist/sendmail-8.14.3/sendmail/srvrsmtp.c
+402c402
+< 					  "Milter: %s=%s, prdr/reject=%s",	\
+---
+> 					  "Milter: %s=%s, reject=%s",	\
+418,422d417
+< 			  if (strncmp(response, "353 ", 4) == 0)   {    \
+< 			    message(response);				\
+< 			  /*state = SMFIR_CONTINUE;*/			\
+< 		           milter_cmd_fail = false;			\
+< 			} else						\
+2219c2214
+< 			message("250-PRDR");
+---
+> 
+3362c3357
+< 					  "Milter: cmd=data, reject/prdr=%s",
+---
+> 					  "Milter: cmd=data, reject=%s",
+3366,3369c3361
+< 			if (strncmp(response, "353 ", 4) == 0) {
+< 			  state = SMFIR_CONTINUE;
+< 			} else {
+< 			  usrerr(response);
+---
+> 			usrerr(response);
+3377d3368
+< 			}
+3476c3467
+< 					  "Milter: data, reject/prdr=%s",
+---
+> 					  "Milter: data, reject=%s",
+3478,3482c3469,3470
+< 			if (strncmp(response, "353 ", 4) != 0) {
+< 			  milteraccept = false;
+< 			  usrerr(response);
+< 			} else
+< 			  message(response);
+---
+> 			milteraccept = false;
+> 			usrerr(response);
+4145d4132
+< 	if (sm_strcasecmp(kp, "prdr") == 0) ; else

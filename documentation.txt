@@ -1,0 +1,158 @@
+
+  Introduction
+
+This is aegee-milter!  It can filter the emails per recipient at SMTP time and decide what to do with the email.  It is a mail filter (milter) for sendmail and postfix, that integrates implements draft-hall-prdr-00 and allows to give partical acceptance/rejection of a message after DATA.  The actual mail proceeding is done by modules, that can do greylisting, virus checking, offer out-of-office service or filter emails with the Sieve (RFC 5228) language.  
+
+aegee-milter gives new dimension in proceeding incoming mails: instead of storing the suspicious spam in a special folder, aegee-milter can consider the user preferences for evaluating spam and rejecting messages, that would go in the spam folder.  No more false positive!  When the message is rejected, its sender will be notified, so the mail does not get silently lost.  Best of all - each recipient can specify near the private criteria for spam evaluation, also the text for the rejection.  She can include there alternative means to be contacted, so even when the mail an ordinary mail is rejected by aegee-milter, the initial sender can be informed how to contact the intended recipient.
+
+  History and Motivation
+
+A measure towards reducing the spam floats is using blacklists of spamming servers.  That's great, until the moment your own server gets blacklisted.  
+
+Exactly this happened to Association des Etats Généraux des Etudiants de l’Europe (AEGEE) in 2007.  A lot of spam arrived for mailing lists, and this spam should be neither discarded, nor distributed, nor bounced.  The only option left was to reject the mails at SMTP level, when the mail was not suited for a mailing list.  The plan was to generate for every mailing list a Sieve script and decide whether to accept or reject the message based on the script.  This plan makes possible to use the same processor for sieve scripts, coming from different mailing lists and sieve generators.
+
+The idea of the author was to code the sieve processor for his university and acknowledge the result as part of his study.  Unfortunately this has not happened.  Nevertheless the mail server of AEGEE had to leave the spam blacklists and this was the motivation for writing aegee-milter.
+
+Later on as side effect other useful features were found to be useful.  E.g. the possibility for each mail recipient to specify what kind of emails she considers as spam and write a personal rejection message for the SMTP answer, so that the sender can read in the rejection alternative means to contact the recipient.  In this way no mails get silently lost and the false positives do not harm.
+
+  Architecture
+
+The inital concept was to develop a sieve processor as mail filter.  After some thoughts the idea was improved and trough sieve the users shall have the possibility to turn on or off different features (like checking for spam only when spamcheck is present).  These features are provided by different modules, that extend the functionality of aegee-milter and are controlled by Sieve.  At the end the sieve processor turns to be one of all these modules, and aegee-milter is the wrapper for the modules, providing PRDR functionality.
+
+Now aegee-milter is the application that talks with sendmail and offers API for the modules.  The modules use the API to proceed the messages and report per recipient if the recipient likes the message or not.  In fact a module can proceed the email once per recipient, or tell in advance that all recipients threat the email in the same manner.  In this case the module proceeds only once the message, regardless of the number of recipients.
+
+Imagine a two dimensional array.  There is one dimension for the recipient, another one for the modules.  Thus if aegee-milter uses five modules and the current email has three recipients, the array will have fifteen cells. aegee-milter executes the code in each cell (a module per recipient) after the RCPT TO: and end of DATA SMTP commands.  
+
+If one module rejects the message for certain recipient, subsequent modules for the same receipients are not executed.
+
+If a module can tell in advance, that it will lead to the same result, when proceeding mails for two different recipients, then this two recipients share a common cell in the array and the number of cells is reduced.
+
+For instance, if there is a virus scanner and a Sieve processor running in this order, and viruses are rejected, then the virus check is done once for all recipients, provided that all recipients handle in the same way mails with viruses (e.g. reject them).  If no virus is found in the message, then the Sieve process is executed per recipient, provided that the recipients have different scripts.
+
+When a message is sent to multiple recipients, that might have different opinions whether to accept the message, cannot decide at the RCPT TO: stage and the sending MTA does not support PRDR, there are different options to deal with the case:
+  The mail is accepted by the first recipient and by all subsequent recipients, that proceed the message in exactly the same way as the first recipient.  All others get temporary error and retry later.
+  The mail is accepted by all recipients.  When necessary bounces are sent.
+
+Plugins called 'lists' are used to provide naming service.  They are used to define where to log the actions, writing to relational databases, how to obtain the sieve scripts.  The 'lists' are programmed to export a concrete API.  Each module documents the names of the needed lists and the lists-plugins export the lists with specific names.
+
+  Installation
+
+aegee-milter uses GNU autotools -- automake, autoconf, libtool and make.
+
+aegee-milter depends on Glib (http://www.gtk.org) and libmilter.  Some plugins providing optional functionality have furhter dependancies (libiodbc, libsieve).
+
+A patch for sendmail 8.14.3 to make it PRDR capable when receiving emails / acting as server is available in the 'contrib' directory.  If you don't install it, aegee-milter will work, but without offering PRDR.
+
+After aegee-milter is installed you need to configure an additional sendmail milter, that connects to aegee-milter.  Documentation how to do this can be found on various places in internet.
+
+As milters work both with sendmail and postfix, aegee-milter shall work with both MTAs, but it was tested only with sendmail.  Please note, that using postfix with PRDR support currently not possible.
+
+When libmilter is compiled with LDAP dependancy, "-lldap" has to be passed trouh CFLAGS when binding aegee-milter.
+
+  Internals
+
+Once unpackaged the aegee-milter has the structure
+  aegee-milter/
+      doc/
+          aegee-milter.texi
+      src/
+          aegee-milter.c
+          helpers.h
+          lists/
+          modules/
+          prdr-list.h
+          prdr-milter.h
+          prdr-mod.h
+          recipient-api.c
+          smfi-operations.h
+      contrib/
+          sm8.14.3-prdr.diff
+
+In the src/ directory, aegee-milter.c contains the main() function, reads the configuration files, loads the plugins (modules and lists).  recipient-api.c provides functions that can be used by the modules.  smfi-operations.h receives and sends data over the milter interface.  In helpers.h are the functions for clearing the memory, executing modules on each email, exporting the naming service to the modules.
+
+The other files are either self-explanatory or described at other places.
+
+  Invoking
+aegee-milter accepts three command line parameters
+-v version info
+-c configuration file
+-h provides help how to invoke aegee-milter
+
+By default the configuration file is aegee-milter.ini in the sysconfdir directory, as specified during the compilation.  Usually the file is /etc/aegee-milter.ini .
+
+  Configuration
+
+aegee-milter uses as configuration the file aegee-milter.ini from the sysconfdir, as specified during the installation.  The syntax of the file is described in GLib, Key-value file parser (http://library.gnome.org/devel/glib/stable/glib-Key-value-file-parser.html).
+
+Don't put spaces, except at the end of the lines and before the equal sign.
+
+The section General is used by aegee-milter, the section Milter is used to set up the connection with the MTA.  The remaining sections are used by the plugins.
+
+A plugin uses a section of the same name as the plugin.
+
+The section General the administrator can adjust:
+  bounce-mode - one of delayed (default), pseudo-delayed, ndr, no-ndr.  The options adjust the behaviour of aegee-milter when a mail is sent for several recipients that might have different optinion whether to accept the message.
+--ONLY delayed IS IMPLEMENTED--
+
+   'delayed' means, that when a mail for several recipients is coming, only the first recipient receives the message, and all subsequent recipients that have the same opinion as the first recipient.  The others get temporary error and shall retry later.
+  'pseudo-delayed' from the perspective of the sending MTA, pseudo-delayed is the same as delayed. However recipients for which the mail was temporary rejected do receive the email if the modules agree on this.  On subsequent delivery tries, caused by the temporary rejection, the mail is recognized as being already proceeded, based on the Message-Id header and is sent once again to the recipient.
+  'ndr' no temporary errors are given after RCPT.  If all recipients reject the message, then after DATA the message is rejected.  Otherwise bounces are sent.
+  'no-ndr' like ndr, but no bounces are sent and for partially rejected rejected messages the sender gets the feeling they are completely accepted.
+
+
+  pidfile the file, which contains the PID of the current running aegee-milter.  Please note, that the file is not deleted, when aegee-milter exits.
+  expire: from time to time data stored temporary in lists shall expire.  expire specifies the frequence in hours how often the lists are refreshed (provided they support this feature).
+
+alarm/list refresh
+  sendmail the location of the sendmail executable.  The default is '/usr/bin/sendmail'
+
+The section Milter 
+  socket:Set the socket through which this filter should communicate with sendmail. (as in the documentation for smfi_setconn)
+  timeout: Sets the number of seconds libmilter will wait for an MTA communication (read or write) before timing out. (as in the documentation for smfi_settimeout)
+
+  Lists
+
+Lists are plugins, that provide naming service for the modules.  "tables" are the tables for adding/removing data exported by the list modules.
+
+   list_log
+Logs messages.  The list is activated by putting [list_log] in the configuration file.  The only option is "file=" and specifies where to log messages.  The list exports the "log" table.  I
+  PLANED: syslog support
+ 
+   list_odbc
+Offers conncetion to relational databases using ODBC.  To compile this module, libiodbc above version 3.52.6 must be installed.  It is activated by the [list_odbc] section in the configuration file.  Posible configuration keywords:
+    create_table - SQL command used to create tables.  %s is replaced with the name of the table
+    dsn - the Data Source Name (DSN)
+    expire - command to expunge the expired entries.  %s is replaced by the name of the table.
+    init - command to use when connected to the database
+    insert_expire - command to execute, when a new entry 
+    insert_permanent - like insert_expire, but without the last parameter
+    remove
+    tables
+    query
+
+   list_timsieved_scripts
+
+Used by mod_sieve to load user's script.  The list is activated by putting
+     [list_timsieved_scripts]
+ in the configuration file.  It exports the table "sieve_scripts".  It reads the scripts, as uploaded by cyrus' timsieved.  The root directory of the script is specified using sievedir= .  list_timsieved_scripts assumes that timsieved does not use multi/virtual domain and operates on a single domain.
+
+   list_listserv
+     used by mod_sieve for external lists
+   list_berkeley (not implemented)
+   
+   writing your own
+
+  Modules
+    The modules are plugins, that perform the actual work in aegee-milter.  The order they are loaded is significant.  
+
+    mod_equal
+      mod_equal rejects emails, where the envelope sender and envelope recipients coinside.  
+
+    mod_relayed
+    mod_sieve
+    mod_clamav
+    mod_simple
+      This a sample module, that can be used as base when writing new modules.
+    mod_spamassassing
+    mod_greylisting
+    writing your own

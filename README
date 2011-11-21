@@ -1,0 +1,4 @@
+Hello,
+
+**************
+I don't know if -pthread shall be included by default in Makefile.am

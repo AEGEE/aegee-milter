@@ -1,0 +1,34 @@
+aegee-prdr
+==============================
+* mod_clamav
+* mod_sav - sender address verification, initially checks in the mail address in envelope From: has valid domain with valid MX record
+* Headers
+* list_bdb
+* list_log - syslog, log when list is unloaded
+* restart/sighup - incl. module unloading/reloading
+* notify - sip, xmpp, mailto, sms, zephyr
+* trim in .ini
+* list_pysieved
+* include GPL copyrights
+* sieve redirect/ Received: headers RFC 5321 Section 4.4.
+* version check over DNS
+* inform the user when runtime errors occur in the script
+* ckeck if some option figures more than once in a configuration file
+* bounce modes
+* mod_spamassassin
+* don't die when lsv is not running
+
+--depend on the above features--
+* rfc822_date, gmt
+* mod_greylisting
+* doc
+  Introduction
+  History and Motivation
+  Internals
+  Configuration
+  Lists
+    log, odbc, timsieved_scripts, listserv, berkeley, dns
+  Modules
+    clamav, debug, equal, relayed, sieve, simple, spamassassing, greylisting
+* website
+* publish

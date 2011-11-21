@@ -1,0 +1,328 @@
+\input texinfo  @c -*-texinfo-*-
+@c first include @node-s with C-x h C-u M-x texinfo-insert-node-lines
+@c then update periodically the master menu with C-u C-c C-u m
+@c and run peridically commands C-u C-c C-u C-a
+@c %**start of header
+@setfilename prdr-milter
+@settitle PRDR Milter Manual 1.0
+@c %**end of header
+@copying
+
+Copyright @copyright{} 2007 @email{dilyan.palauzov@@aegee.org, Dilyan Palauzov}
+
+@quotation
+Permission is granted to ...
+@end quotation
+
+@end copying
+@titlepage
+@title PRDR-Milter
+@subtitle
+@author @email{dilyan.palauzov@@aegee.org, Dilyan Palauzov}
+@page
+@insertcopying
+@setcontentsaftertitlepage
+@end titlepage
+@headings double
+@contents
+
+@dircategory Email
+@direntry
+* PRDR Milter: (prdr-milter)  Per Recepient Delivery Responce Sendmail Filter with Sieve Interpreter
+@end direntry
+
+@ifnottex
+@node Top, Overview, (dir), (dir)
+@top PRDR-Milter
+@insertcopying
+@end ifnottex
+This is @command{prdr-milter}, implementing at first place the PRDR Protocol @url{http://www.ietf.org/internet-drafts/draft-hall-prdr-00.txt} on (p)milter cabaple MTA, when working as server. In addition it provides a new API for email filtering, that enables a mail filter to decide per recipient what to do with the mail.
+@menu
+* Overview::                    
+* Lists::                       
+* Modules::                     
+* Configuration::               
+* Patching Sendmail::           
+* Signals::                     
+* History::                     
+* License::                     
+* Index of Configuration File Options::  
+* Index of Application Programming Interface::  
+* Concept Index::               
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Lists
+
+* Lists API::                   
+* sample-list::                 
+* berkeley::                    
+* cyrus-vacation::              
+
+Modules
+
+* Modules API::                 
+* sample-mod::                  
+* greylisting::                 
+* sieve::                       
+* clamav::                      
+* spamassassin ::               
+
+Configuration
+
+* Bounce Mode::                 
+* Sample Configuration::        
+
+@end detailmenu
+@end menu
+
+@node Overview, Lists, Top, Top
+@chapter Overview
+
+One disadantage of SMTP is that it enables to say if a recipient wants to receive a mail only at the RCPT: phase, when the mail body has not been transmitted. tus, it is not possible for the recipients to say if they want to receive a mail after looking at its content and evaluating it for spaminess. With the Per Recipient Delivery Responce @url{http://www.ietf.org/internet-drafts/draft-hall-prdr-00.txt} an idea from LMTP is transferred to SMTP, that allows to take decisions about the acceptance for each user, after the mail body has been tranmitted, but before the SMTP connection is closed. 
+
+At the moment if a mail is going to several recipients the corresponding MTA has to take responsibility for all recipients and if some of them do not like the mail, a Non Delivery Responce shall be generated. Such NDRs can end in spamtraps/honeypots, thus blacklisting the server. 
+
+Since sending NDRs is not good and discarding mails is even worse, I have consider an implementation of the PRDR protocol as the only possible escape from the problem. 
+
+The further, the Milter interface supposes that every MTA plugin receives its own copy of the message. Imagine you have more than one Milters, then transferring the same message over sockets several times is inefficient. @command{prdr-milter} can be extended by programming plugins, that directly benefit from the PRDR capabilities of @command{prdr-milter}. The provided API makes possible for a plugin to specify if it wants to act on the whole message with all recipients, or it wants to act only on the copy, that a single recipient will receive.
+
+Imagine, a MTA running a virus scanner, and spam scanner. The virus scanner will have the same results for every user, therefore it is feasable to run it on the message as whole, not once per each recipient. The spam scanner, on contrary, could have customized rules for many recipients, thus it might be run once on the whole message for the users, that do not have their spam settings, and once for each of the other recipients. The only thing the filter has to do, in order to distinguish this cases, is to say if the result of applying the filter to two concrete recipients will be the same.
+
+
+@node Lists, Modules, Overview, Top
+@chapter Lists
+@cindex Lists
+Some mail filters need persistence service to work. Instead of forcing every plugin developer to invent his own service, @command{prdr-milter} provides the plugins with lists, where the plugins can store data
+
+E.g. you cannot perform grey listing without persistance, and sending vacation messages without remembering when was the concrete recipient notifies about the absence for the last time, is unpleasant. 
+
+From the users perspective the lists are adjusted in the configuration file. Every list defines by itself, how and with which settings it will be configured. @command{prdr-milter} supports the concept that data in lists may need to expire, and provides an API, that enables this behaviour. Any list module may expose the name of the lists, that are managed by it. Later on you will see that modules can require the availability of lists with concrete names in order to work at all. In order to be defined, any list needs to be exposed by the list engine's prdr_list_reqister, after the list engine has read the configuration file. Thus lists have to be either defined in the list plug in, or be listed in the configuration of the plug in. Otherwise they do not get loaded.
+
+Later on the modules can query the so defined lists, by their name and refuse the work, if some list is not available.
+
+You can write your own plug in for lists, or can use the alread provided ones. 
+@command{prdr-milter}
+
+@menu
+* Lists API::                   
+* sample-list::                 
+* berkeley::                    
+* cyrus-vacation::              
+@end menu
+
+@node Lists API, sample-list, Lists, Lists
+@section Lists API
+@cindex Lists API
+You can programme your own list, that plugs into prdr-milter by implementing the functions from @file{prdr-list.h}. Moreover, a module shall destruct its keep internally the names of all opened lists and close them properly, when the module is unloaded. It is up to the used linker to specify which function will be executed when the module is unloaded.
+
+
+@node sample-list, berkeley, Lists API, Lists
+@section sample-list
+@cindex sample-list
+@code{sample-list} provides a skeleton for programming lists. It does generally nothing, but serving as a simple implementation that stores and retrieves data in memory.
+
+@node berkeley, cyrus-vacation, sample-list, Lists
+@section berkeley
+
+@node cyrus-vacation,  , berkeley, Lists
+@section cyrus-vacation
+
+@node Modules, Configuration, Lists, Top
+@chapter Modules
+
+@menu
+* Modules API::                 
+* sample-mod::                  
+* greylisting::                 
+* sieve::                       
+* clamav::                      
+* spamassassin ::               
+@end menu
+
+@node Modules API, sample-mod, Modules, Modules
+@section Modules API
+
+prdr-milter is extandable with new modules, that are loaded as libraries, and export specific functions. The module names have to start with @code{mod_}, be dynamic libraries, and reside in @code{plugin-dir}.
+
+Modules can export the functions:
+@ftable @code
+@item int prdr_mod_status(void*)
+(required) returns if the module shall be executed after the envelope is received, after the headers are received, or after the message body is received. The return value is logically ORed of @emph{MOD_ENVELOPE}, @emph{MOD_HEADERS} or @emph{MOD_BODY}.
+@item int prdr_mod_run(void*)
+(required) performs the operation on the message for the concrete user
+@item int prdr_mod_equal(const char*, const char*)
+Specifies if applying the module to two different users will return exactly the same result. Returining @emph{0} means that the results might differ. Returning always @emph{1} is the same as not exporting the function - in this case the module will act in the same way for every recipient.
+@item int prdr_mod_init(void*)
+is called for every different recipient (in terms of prdr_mod_equal) and enables the module to initialize its data.
+@item int prdr_mod_destroy(void*)
+is called when the recipient's data is being destroyed.
+@end ftable
+Modules can bind to any library. The prdr-related API that can be used by the modules is listed below. The first paramer is always the opaque pointer, that was provided when calling prdr_mod_@dots{}
+@ftable @code
+@item int prdr_add_recipient(void*, const char* address)
+adds a recipient to the message. Returns -1 if the recipient cannot be added, e.g. is already included, or 0 on success.
+@item int prdr_del_recipient(void*, const char* address)
+removes a recipient to the message. Modules can remove only recipient they have added, or the original recipient.
+@item const char** prdr_get_headers(const void*, const char* field)
+returns a null terminated array of haders, that have @code{field}. If @code{field} is NULL or "", all headers a returned.
+@item int prdr_add_header(priv*,)
+@item int prdr_del_header(priv*,)
+@item prdr_set_responce(priv*, const char *code, const char *dsn, const char *reason)
+@item const char* prdr_get_envsender(priv*)
+@item int prdr_set_envsender(priv*, const char* env);
+@item prdr_get_body
+@item prdr_set_body
+@item prdr_get_priv
+@item prdr_set_priv
+@item prdr_get_stage(void*)
+Reports if currently the envelope (MOD_ENVELOPE), the headers (MOD_HEADERS) or the body (MOD_BODY) is being received.
+@item prdr_set_activity
+@item prdr_get_activity
+@item prdr_list_insert
+@item prdr_list_insert_expire
+@item prdr_list_query
+@item prdr_list_remove
+@end ftable
+
+Modules can interact in terms of disabling or enabling each other with the prdr_set_activity and prdr_get_activity. If a module is inactive for some recipient, it will not be executed. If a module was executed, and was later put in inactive state, the results of the execution will be ignored.
+
+prdr_set_envsender, prdr_@dots{}_header and prdr_@dots{}_body cannot be called during the MOD_ENVELOPE stage. prdr_get_body cannot be called during the MOD_HEADERS stage. Otherwise the results of the module execution for the current stage will not be taken into account.
+
+If one module adds an recipient, and another removes it later, then the mail will not be delivered to that address.
+@node sample-mod, greylisting, Modules API, Modules
+@section sample-mod
+
+@node greylisting, sieve, sample-mod, Modules
+@section greylisting
+@vindex spamtrap
+The greylisting module, performs ... greylisting. By default, when loaded, it is disabled and can be enabled by other modules or via the [Greylisting] section in the configuration file. 
+
+In order to make spammers lose the way, the greylisting module does not expose the policy "every recipient makes failtemp, except the spamtraps" and thus prevent spammers from guessing which are the spamtraps. Practically, when a mail is initially sent to several recipients, and one of them has accepted the message, then the spamtraps will respsond with tempfail but deliver the mail. Otherwise they will accept the message. If a single message is send simultaneously to several spamtraps, only the first one will accept the message, the others will do tempfail.
+
+The key @code{spamtraps} specifies the list of spamtraps in your domain. It can contain invalid addresses.
+
+The presence of @code{spamtraps} activates the greylisting for all mailboxes, otherwise it will make no sence.
+
+@node sieve, clamav, greylisting, Modules
+@section sieve
+
+@node clamav, spamassassin , sieve, Modules
+@section clamav
+
+@node spamassassin ,  , clamav, Modules
+@section spamassassin 
+
+@node Configuration, Patching Sendmail, Modules, Top
+@chapter Configuration
+@cindex configuration file
+In the configuration file we define the mode PRDR-milter is going to bounce messages, the available lists and the modules that will be in use.  Module could be further customized, refer for the documentation of the concrete module to find details.  By the default the configuration file is called @file{prdr-milter.conf} and is searched in @file{/etc} or @file{/usr/local/etc}, depending on the @samp{--sysconfdir} specified during the configuration. Another configuration file can be used with the @samp{-c} option.  If it refers to a directory, a file called @file{prdr-milter.conf} in that directory is being opened.
+
+The syntax of the configuration file is .ini-like, as described by the Desktop Entry Specification (http://freedesktop.org/wiki/Specifications/desktop-entry-spec), extended by GLib (http://library.gnome.org/devel/glib/unstable/glib-Key-value-file-parser.html) with lists - a sequence of strings, separated by comma. PRDR-milter requires two sections -- General and Milter, the plug-ins can make use of additional sections.
+
+The General section described the behaviour of prdr-milter. It has the keys
+@vtable @code
+@item pid-file
+(optional) Specifies where to store the Process ID of the current prdr-milter;
+@item plugin-dir
+(optional) Specifies from which directory to load the list and module plugins. By default those are searched in libdir/prdr-milter, where libdir is specified at configure time;
+@item bounce-mode
+(optional) Specifies the bounce-mode (see below);
+@item modules
+(required) Specifies which module plugins to load and execute;
+@item lists
+(optional) Specifies which list plugins to load. The plugins describe which table-names do they support;
+@end vtable
+
+The Milter section describes how to connect to the MTA. It has the keys:
+@vtable @code
+@item socket
+(required) Specifies the milter socket sendmail used to approach the milter;
+@item timeout
+(optional) Specifies the timeout the application will without any responce from sendmail before giving up.
+@end vtable
+
+We define there the @code{bounce-mode} (@pxref{Bounce Mode}), the group @code{milter}, the @code{pidfile} and the modules to load.  Each module can specify further configuration options.
+
+@menu
+* Bounce Mode::                 
+* Sample Configuration::        
+@end menu
+
+@node Bounce Mode, Sample Configuration, Configuration, Configuration
+@section Bounce Mode
+@cindex Message-ID
+@vindex bounce-mode
+When a mail envelope has only one recipient or for clients that support PRDR @url{http://www.ietf.org/internet-drafts/draft-hall-prdr-00.txt} the mail is distributed using PRDR.  Recipients that are rejected by a module during the envelope exchange aren't affected neither from those option.  When there is no PRDR support there are several options to choose from:
+@vtable @code
+@item delayed
+The first recipient is accepted and all following recipients that have the same settings as the first one.  All other recipients are temporary rejected
+@item pseudo-delayed
+(default): Like delayed, however the mail, as far as it has a @code{Message-ID:} header, is delivered promptly to the recipients, if they want it.  Subsequent tryes to deliver mail with the same @code{Message-ID:} to the initially rejected recipients will accept the responsibility fot the message but discard it.  This mode requires the definition of the @cite{delayed} list.  If no such list is defined, and Berkeley DB support was compile in, /var/prdr-milter/delayed is used, othereise the mode is switched to @code{delayed} instead.
+@item ndr
+The mail is accepted with all recipients.  If all recipients do not want to receive the message, it is rejected as responce to the data command.  If only some of all recipients do not want to receive the message, one Non-Delivery-Report is sent.
+@item no-ndr
+The mail is accepted with all recipients.  If all recipients do not want to receive the message, it is is rejected as responce to the data command.  If only some of all recipients do not want to recieve the message, the mail is forwarded further to all recipients. 
+@end vtable
+
+@node Sample Configuration,  , Bounce Mode, Configuration
+@section Sample Configuration
+@example
+
+[General]
+bounce-node = ndr
+pid-file = /var/run/prdr-milter.pid
+pidfile=/var/run/prdr.pid
+modules = sender-verify, clamav, sieve, greylisting, spamassassin
+lists = cyrus_sieve_scrips, cyrus_sieve_vacation
+
+[Milter]
+socket=local:/var/run/prdr-milter.sock
+
+@end example
+
+@node Patching Sendmail, Signals, Configuration, Top
+@chapter Patching Sendmail
+Sendmail by default neitehr advertizes the PRDR extension when clients connect, nor passes the PRDR keyword to the milter interface, when the client issues the word as part of the @code{MAIL FROM} command
+
+@node Signals, History, Patching Sendmail, Top
+@chapter Signals
+@cindex SIGALRM
+@cindex SIGTRM
+@cindex SIGHUP
+@cindex SIGUSR1
+@cindex SIGIO
+prdr-milter interprets the following signals
+@table @code
+@item SIGALRM
+Expunge of expired data from the databases. The applications sends itself this signal on regular basis as specified in the @code{xref expired} configuration option. If the user sends.
+@item SIGTRM
+Stops receiving new messages, proceeds all currently started messages and terminates prdr-milter.
+@item SIGHUP
+Closes all lists and modules and rereads the configuration file.
+@item SIGUSR1
+Restarts prdr-milter, by means of closing the current process and starting a new one with the same command-line parameters as the current. Useful to perform after update, automatically invoked by @command{make install}.
+@item SIGIO
+Upon reception on SIGIO, mod_clamav reloads the virus database. mod_clamav registers dnotify system call and receives SIGIO automatically SIGIO whenever the virus databases is modified.
+@end table
+@node History, License, Signals, Top
+@chapter History
+
+@node License, Index of Configuration File Options, History, Top
+@chapter License
+
+@node Index of Configuration File Options, Index of Application Programming Interface, License, Top
+@unnumbered Index of Configuration File Options
+
+@printindex vr
+
+@node Index of Application Programming Interface, Concept Index, Index of Configuration File Options, Top
+@unnumbered Index of Application Programming Interface
+@printindex fn
+
+@node Concept Index,  , Index of Application Programming Interface, Top
+@unnumbered Concept Index
+@printindex cp
+
+@bye

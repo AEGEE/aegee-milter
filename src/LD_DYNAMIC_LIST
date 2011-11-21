@@ -1,0 +1,10 @@
+{
+  prdr_list_*;
+  prdr_set_*;
+  prdr_add_*;
+  prdr_get_*;
+  prdr_del_*;
+  prdr_sendmail;
+  prdr_inifile;
+};
+
