@@ -5,6 +5,7 @@
 #include <string.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+#include "prdr-list.h"
 
 #define UNICODE 1
 GKeyFile* prdr_inifile;
@@ -180,7 +181,7 @@ list_odbc_LTX_prdr_list_insert (const char* const table,
 }
 
 void*
-list_odbc_LTX_prdr_list_query (const char* table, const char *user, const char *key) {
+list_odbc_LTX_prdr_list_query (const char* table UNUSED, const char *user UNUSED, const char *key UNUSED) {
   //SELECT
   return NULL;
 }
@@ -188,7 +189,7 @@ list_odbc_LTX_prdr_list_query (const char* table, const char *user, const char *
 int
 list_odbc_LTX_prdr_list_expire ()
 {
-  if (sql_expire == NULL) return;
+  if (sql_expire == NULL) return 0;
   int i = 0;
   SQLRETURN ret = 0;
   g_mutex_lock (mutex);

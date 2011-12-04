@@ -9,16 +9,15 @@
 #include <string.h>
 G_BEGIN_DECLS
 #include "prdr-list.h"
-
-  struct header{
-    char *field, *value;
-    //bit mask for status
-    //00000000 - nothing/default
-    //0xxxxxxx - added at position xxxxxxx
-    //10xxxxxx - deleted from position xxxxxx from the begin
-    //11xxxxxx - deleted from position xxxxxx from the end
-    unsigned char status;  
-  };
+struct header{
+  char *field, *value;
+  //bit mask for status
+  //00000000 - nothing/default
+  //0xxxxxxx - added at position xxxxxxx
+  //10xxxxxx - deleted from position xxxxxx from the begin
+  //11xxxxxx - deleted from position xxxxxx from the end
+  unsigned char status;  
+};
 
 struct message {
   char* envfrom;
@@ -33,7 +32,7 @@ struct so_list {
   int   (*expire) ();
   char* (*query) (const char*, const char *, const char*);
   int   (*remove) (const char*, const char*, const char*);
-  int   (*insert)        (const char*, const char*, const char*, const void*, const unsigned int);
+  int   (*insert) (const char*, const char*, const char*, const void*, const unsigned int);
 };
 
 struct list {
@@ -94,8 +93,6 @@ struct recipient {
   //RCPT_NOTIFY_NEVER
 };
 
-struct so_module **so_modules;
-unsigned int num_so_modules;
 //int prdr_stage;
 char* sendmail;
 
@@ -146,11 +143,22 @@ void		prdr_set_priv_msg	(struct privdata* const priv,
 					 void* const user);
 char*		getdate ();
 int		prdr_sendmail(const char* from,
-			      char** rcpt,
+			      const char* const * const rcpt,
 			      const char* body,
 			      const char* date,
 			      const char* autosubmitted);
 inline char*		prdr_add_string		(struct privdata* const priv, const char* string);
+const struct so_list* prdr_list_is_available (const char *listname);
+void clear_ehlo (struct privdata *priv);
+void clear_message (struct message *msg);
+void clear_recipient (struct recipient *rcp);
+void clear_recipients (struct privdata *priv);
+char* normalize_email (struct privdata* priv, const char *email);
+int apply_modules (struct privdata* priv);
+int inject_response (SMFICTX *ctx, char* const code, char* const dsn, char* const reason);
+sfsistat set_responses (struct privdata* priv);
+void clear_privdata (struct privdata* const priv);
+void clear_module_pool (struct privdata* const priv);
 G_END_DECLS
  
 #endif /* PRDR_MILTER_H */

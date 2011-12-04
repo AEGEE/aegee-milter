@@ -4,12 +4,11 @@
 #include "prdr-milter.h"
 #include <glib/gstdio.h>
 
-static struct list **lists = NULL;
-static struct so_list **so_lists;
-static unsigned int num_tables, num_so_lists;
-static int bounce_mode;
-#include "helpers.h"
-#include "smfi-operations.h"
+int bounce_mode;
+unsigned int num_tables, num_so_lists, num_so_modules;
+struct list **lists = NULL;
+struct so_list **so_lists;
+struct so_module **so_modules;
 static int alarm_period;
 extern const lt_dlsymlist lt_preloaded_symbols[];
 char *prdr_section;
@@ -320,6 +319,7 @@ main (int argc, char **argv)
       }
       g_free (buf);
     }
+  extern struct smfiDesc smfilter;
   if (smfi_register (smfilter) == MI_FAILURE)
     g_printf ("smfi_register failed, most probably not enough memory\n");
   lt_dlpreload_default (lt_preloaded_symbols);

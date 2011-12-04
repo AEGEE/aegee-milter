@@ -1,7 +1,7 @@
 #include "prdr-mod.h"
 
 int
-mod_equal_LTX_prdr_mod_status (void* priv)
+mod_equal_LTX_prdr_mod_status (void* priv UNUSED)
 {
   return MOD_RCPT | MOD_BODY;
 }
@@ -48,7 +48,7 @@ mod_equal_LTX_prdr_mod_run (void* priv)
 }
 
 int
-mod_equal_LTX_prdr_mod_equal (struct privdata* priv, char* user1, char* user2)
+mod_equal_LTX_prdr_mod_equal (struct privdata* priv UNUSED, char* user1 UNUSED, char* user2 UNUSED)
 {
   return 1;
 }

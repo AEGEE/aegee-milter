@@ -36,7 +36,7 @@ mod_delay_LTX_load ()
 }
 
 int
-mod_delay_LTX_prdr_mod_status (void* priv)
+mod_delay_LTX_prdr_mod_status (UNUSED void* priv)
 {
   return MOD_EHLO | MOD_MAIL | MOD_RCPT | MOD_BODY;
 }
@@ -77,7 +77,7 @@ mod_delay_LTX_prdr_mod_run (void* priv)
 }
 
 int
-mod_delay_LTX_prdr_mod_equal (struct privdata* priv, char* user1, char* user2) {
+mod_delay_LTX_prdr_mod_equal (UNUSED struct privdata* priv, UNUSED char* user1, UNUSED char* user2) {
   return 1;
 }
 

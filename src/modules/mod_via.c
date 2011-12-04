@@ -10,7 +10,7 @@ mod_via_LTX_load ()
 }
 
 int
-mod_via_LTX_prdr_mod_status (void* priv)
+mod_via_LTX_prdr_mod_status (void* priv UNUSED)
 {
   return MOD_HEADERS;
 }
@@ -32,11 +32,11 @@ int
 mod_via_LTX_prdr_mod_run (void* priv)
 {
   struct privdata *cont = (struct privdata*) priv;
-  char** received = prdr_get_header (priv, "Received");
+  char** received = prdr_get_header (cont, "Received");
   if (received && received[0]) {
     char *ip = received_via (received[0]);
     if (ip) {
-      prdr_list_insert ("log", prdr_get_recipient (priv), "mod_via", ip, 0);
+      prdr_list_insert ("log", prdr_get_recipient (cont), "mod_via", ip, 0);
       g_free(ip);
     }
   }
@@ -45,7 +45,7 @@ mod_via_LTX_prdr_mod_run (void* priv)
 }
 
 int
-mod_via_LTX_prdr_mod_equal (struct privdata* priv, char* user1, char* user2) {
+mod_via_LTX_prdr_mod_equal (struct privdata* priv UNUSED, char* user1 UNUSED, char* user2 UNUSED) {
   return 1;
 }
 /*

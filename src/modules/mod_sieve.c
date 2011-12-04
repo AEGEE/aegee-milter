@@ -69,7 +69,7 @@ substitute_named_variable (struct privdata *cont,
 
 static inline char*
 expand_variables_in_string (struct privdata *cont,
-			    char *string)
+			    const char * const string)
 {
   int len = strlen (string), s1 = 0, s2 = 0, j;
   char* string2 = malloc (len+1);
@@ -245,7 +245,6 @@ sieve_redirect (sieve2_context_t *s, void *my)
   g_ptr_array_add ( dat->redirect_to,
 		    g_strdup (sieve2_getvalue_string (s, "address")));
   // return SIEVE2_OK;
-  char **rcpt;
   GString *body = g_string_new ("Received: from ");
   char IP[256];
   switch (cont->hostaddr->sa_family) {
@@ -264,7 +263,7 @@ sieve_redirect (sieve2_context_t *s, void *my)
   g_string_append_printf (body, "\r\nResent-From: %s\r\nResent-To: ",
 			  prdr_get_envsender (cont));
   char *temp = NULL;
-/* 
+  /* 
   if (sieve2_getvalue_int (s, "list")) {
     char *list_plugin = g_strdup (sieve2_getvalue_string(s, "address"));
     temp = list_plugin;
@@ -299,13 +298,10 @@ sieve_redirect (sieve2_context_t *s, void *my)
 	iter++;
       }
     };
-  } else */ { //no list, just @-like address
-    rcpt = g_malloc (sizeof (char*) * 2);
-    rcpt[0] = sieve2_getvalue_string (s, "address");
-    rcpt[1] = NULL;
-    prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve, action redirect, to: ", rcpt[0], 0);
-    g_string_append_printf (body, "%s\r\n", rcpt[0]);
-  }
+  } else */ //no list, just @-like address
+  char const * const rcpt[] = {sieve2_getvalue_string (s, "address"), NULL};
+  prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve, action redirect, to: ", rcpt[0], 0);
+  g_string_append_printf (body, "%s\r\n", rcpt[0]);
   //Resent-Sender, Resent-CC, Resent-BCC, Resent-Msg-Id
   GPtrArray* p = prdr_get_headers (cont);
   unsigned int i;
@@ -319,20 +315,19 @@ sieve_redirect (sieve2_context_t *s, void *my)
   //prepend Received: header, as of RFC5231, Section 4.4. Trace Information
   g_string_append_printf (body, "\r\n%s", orig_body->str);
   //insert body
-  prdr_sendmail( strcmp (prdr_get_envsender(cont), "<>")
-		 ? prdr_get_recipient(cont) : NULL, rcpt, body->str,
-		 "Resent-Date", "auto-generated");
+  prdr_sendmail ( strcmp (prdr_get_envsender(cont), "<>")
+		  ? prdr_get_recipient(cont) : NULL, rcpt, body->str,
+		  "Resent-Date", "auto-generated");
   g_string_free (body, 1);
   if (temp) g_free (temp);
   prdr_del_recipient (cont, prdr_get_recipient(cont));
   i = 0;
-  g_free (rcpt);
   //  g_printf("---sieve_redirect---\n");
   return SIEVE2_OK;
 }
 
 int
-sieve_discard (sieve2_context_t *s, void *my)
+sieve_discard (sieve2_context_t *s UNUSED, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
   prdr_list_insert ("log", prdr_get_recipient (cont),
@@ -357,7 +352,7 @@ sieve_reject (sieve2_context_t *s, void *my)
   char *text = g_strconcat ("from " , prdr_get_envsender (cont),
 			    ", mod_sieve, action reject:", NULL);
   if ( (cont->current_recipient->current_module->flags & MOD_FAILED) == 0)
-    prdr_list_insert("log", prdr_get_recipient(cont), text, message, 0);
+    prdr_list_insert ("log", prdr_get_recipient (cont), text, message, 0);
   //  g_printf("---sieve_reject %p %s---\n", s, cont->msg->envfrom);
   g_free (text);
   g_free (message);
@@ -404,9 +399,9 @@ sieve_notify (sieve2_context_t *s, void *my)
   //importance - lipswa
   //priority - otpadnalo
   //g_printf("sieve_notify\n");
-  char* method = sieve2_getvalue_string (s, "method");
+  char const * const method = sieve2_getvalue_string (s, "method");
   //  char** options = sieve2_getvalue_stringlist (s, "options");
-  char* message = sieve2_getvalue_string (s, "message");
+  char const * const message = sieve2_getvalue_string (s, "message");
   switch (*method) {
   case 's': //sip
     if (mod_sieve_notify_sip == FALSE)
@@ -423,8 +418,8 @@ sieve_notify (sieve2_context_t *s, void *my)
 
     if (strstr(method, "mailto:") == method) {
       GString *body = g_string_new ("From: AEGEE Mail Team <mail@aegee.org>\r\n");
-      char *recipient = method + 7;
-      char *temp = strchr(recipient, '?');
+      char const * const recipient = method + 7;
+      char *temp = strchr(method + 7, '?');
       if (temp) {
 	temp[0] = '\0';
 	temp++;
@@ -439,7 +434,7 @@ sieve_notify (sieve2_context_t *s, void *my)
       g_string_append_printf (body, "To: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", recipient, message);
 
       //log
-      char* rcpt[] = {recipient, NULL};
+      char const * const rcpt[]  = {recipient, NULL};
       char* auto_submitted = g_alloca (strlen (prdr_get_recipient(cont)) + 30);
       g_sprintf (auto_submitted, "auto-notified; owner-email=\"%s\"",
 		 prdr_get_recipient(cont));
@@ -536,15 +531,15 @@ sieve_vacation (sieve2_context_t *s, void *my)
   prdr_add_header (cont, 0, "X-AEGEE-milter", "mod_sieve vacation sent");
   prdr_list_insert ("log", prdr_get_recipient (cont), "vacation", "sent", 0);
   //  g_printf("***mod sieve: vacation I***\n");
-  char *address = sieve2_getvalue_string (s, "address");
-  char *from = sieve2_getvalue_string (s, "fromaddr");//or NULL
+  char const * const address UNUSED = sieve2_getvalue_string (s, "address");
+  char const * const from = sieve2_getvalue_string (s, "fromaddr");//or NULL
   //  g_printf("***mod sieve: vacation J***\n");
-  char *subject = sieve2_getvalue_string (s, "subject");//Subject: or NULL
+  char const * const subject = sieve2_getvalue_string (s, "subject");//Subject: or NULL
 
   GString* msg = g_string_new ("Subject: ");
   g_string_append_printf (msg, "%s\r\n", subject);
   //  g_printf("***mod sieve: vacation K***\n");
-  char *message = sieve2_getvalue_string (s, "message");//text
+  char const * const message = sieve2_getvalue_string (s, "message");//text
   int mime = sieve2_getvalue_int (s, "mime");//1 or 0
   //  g_printf("***mod sieve: vacation L***\n");
   headers = prdr_get_header (cont, "References");
@@ -582,7 +577,7 @@ sieve_vacation (sieve2_context_t *s, void *my)
     g_string_append (msg, "\r\n");
   g_string_append_printf (msg, message);
   prdr_sendmail (NULL,
-		 (char*[]){ prdr_get_envsender (cont) , NULL}, 
+		 (const char const *[]){ prdr_get_envsender (cont) , NULL}, 
 		 msg->str, "Date", "auto-replied");
   //  g_printf("***mod sieve: vacation Z***\n");
   g_string_free (msg, 1);
@@ -592,7 +587,7 @@ sieve_vacation (sieve2_context_t *s, void *my)
 }
 
 int
-sieve_keep (sieve2_context_t *s, void *my)
+sieve_keep (sieve2_context_t *s UNUSED, void *my)
 {
   //g_printf("***sieve_keep***\n");
   struct privdata *cont = (struct privdata*) my;
@@ -618,7 +613,7 @@ sieve_getheader (sieve2_context_t *s, void *my)
     prdr_do_fail (cont);
     return SIEVE2_ERROR_FAIL;
   }
-  char *header = sieve2_getvalue_string (s, "header");
+  char const * const header = sieve2_getvalue_string (s, "header");
   char** ret_headers = prdr_get_header (cont, header);
   if (ret_headers == NULL || ret_headers[0] == NULL) {
     sieve2_setvalue_stringlist (s, "body", NULL);
@@ -749,13 +744,11 @@ sieve_getscript (sieve2_context_t *s, void *my)
 {
   //g_printf("***sieve_getscript***\n");
   struct privdata *cont = (struct privdata*) my;
-  char *path = sieve2_getvalue_string (s, "path"); //path = ":personal", ":global", ""
-  char *name = sieve2_getvalue_string (s, "name"); //name of the script for the current user
+  char const * const path = sieve2_getvalue_string (s, "path"); //path = ":personal", ":global", ""
+  char const * const name = sieve2_getvalue_string (s, "name"); //name of the script for the current user
   char *temp;
-  if (path == NULL) path = "";
-  if (name == NULL) name = "";
-  if ( *path == '\0' || strcmp (path, ":global")) {//the scope is private
-    if (*name == '\0') {
+  if ( *path == '\0' || path == NULL || strcmp (path, ":global")) {//the scope is private
+    if (*name == '\0' || name == NULL) {
       //default script for recipient
       char *def = get_default_script_for_recipient (my, cont->current_recipient->address);
       if (def == NULL) //load the global default script
@@ -771,7 +764,7 @@ sieve_getscript (sieve2_context_t *s, void *my)
       g_hash_table_insert (dat->hashTable, name, temp);
     }
   } else { //the scope is global
-    if (*name == '\0') {
+    if (*name == '\0' || name == NULL) {
       sieve2_setvalue_string (s, "script",
 			      get_default_script_for_recipient (my, ""));
       //g_printf("---sieve_getscript in cache private---\n");
@@ -806,7 +799,7 @@ static sieve2_callback_t sieve_callbacks[] = {
   { SIEVE2_MESSAGE_GETENVELOPE,   sieve_getenvelope },
   { SIEVE2_MESSAGE_GETSUBADDRESS, sieve_getsubaddress },
   //  { SIEVE2_TEST_EXTLISTS,         sieve_extlists },
-  {0} };
+  {0, 0} };
 
 int
 mod_sieve_LTX_prdr_mod_status (void* priv)

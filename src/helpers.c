@@ -1,12 +1,20 @@
 #include "prdr-list.h"
+#include "prdr-milter.h"
+#include <glib/gprintf.h>
 
-static inline void
-clear_ehlo (struct privdata *priv)
+extern int bounce_mode;
+extern unsigned int num_tables, num_so_lists, num_so_modules;
+extern struct list **lists;
+extern struct so_list **so_lists;
+extern struct so_module **so_modules;
+
+inline void
+clear_ehlo (struct privdata *priv UNUSED)
 {
 }
 
 //clears all message-oriented data
-static inline void
+inline void
 clear_message (struct message* msg)
 {
   if (msg) {
@@ -27,7 +35,7 @@ clear_message (struct message* msg)
 }
 //-----------------------------------------------------------------------------
 //clears all recipient oriented data
-static inline void
+inline void
 clear_recipient (struct recipient *rec)
 {
   if (rec) {
@@ -36,7 +44,7 @@ clear_recipient (struct recipient *rec)
   }
 }
 
-static inline void
+inline void
 clear_recipients (struct privdata* const priv)
 {
   if (priv->recipients) {
@@ -49,7 +57,7 @@ clear_recipients (struct privdata* const priv)
   }
 }
 
-static inline void
+inline void
 clear_module_pool (struct privdata* const priv)
 {
   if (priv->module_pool == NULL) return;
@@ -77,7 +85,7 @@ clear_module_pool (struct privdata* const priv)
 
 //-----------------------------------------------------------------------------
 
-static inline void
+inline void
 clear_privdata (struct privdata* const priv)
 {
   //  g_printf ("***clear_privdata %p***\n", priv);
@@ -96,7 +104,7 @@ clear_privdata (struct privdata* const priv)
 }
 //-----------------------------------------------------------------------------
 
-static inline int 
+inline int 
 inject_response (SMFICTX *ctx,
 		 char* const code,
 		 char* const dsn,
@@ -185,7 +193,7 @@ compact_headers (struct privdata* const priv, unsigned int i)
 }
 
 //-----------------------------------------------------------------------------
-static inline sfsistat 
+inline sfsistat 
 set_responses (struct privdata* priv)
 {
   //g_printf("***set_responses, num_recipients =%i, num_so_modules =%i***\n", priv->recipients->len, num_so_modules);
@@ -343,7 +351,7 @@ set_responses (struct privdata* priv)
 
 //-----------------------------------------------------------------------------
 //returns -1 failed, 0 - not failed & ACCEPTED, >0 - not failed & REJECTED
-static inline int
+inline int
 apply_modules (struct privdata* priv)
 {
   unsigned int i;
@@ -394,7 +402,7 @@ apply_modules (struct privdata* priv)
 }
 //-----------------------------------------------------------------------------
 
-static inline char*
+inline char*
 normalize_email (struct privdata* priv, const char *email)
 {
   //remove spaces and <
@@ -412,7 +420,7 @@ normalize_email (struct privdata* priv, const char *email)
 }
 //-----------------------------------------------------------------------------
 
-static inline const struct so_list*
+inline const struct so_list*
 prdr_list_is_available (const char *listname)
 {
   unsigned int i = 0;

@@ -15,19 +15,19 @@
 #define unload			mod_simple_LTX_unload
 
 int
-prdr_mod_status (void* priv)
+prdr_mod_status (void* priv UNUSED)
 {
   return MOD_RCPT | MOD_HEADERS;
 }
 
 int
-prdr_mod_run (void* priv)
+prdr_mod_run (void* priv UNUSED)
 {
   return 0;
 }
 
 int
-prdr_mod_equal (struct privdata* priv, char* user1, char* user2)
+prdr_mod_equal (struct privdata* priv UNUSED, char* user1 UNUSED, char* user2 UNUSED)
 {
   return 1;
 }

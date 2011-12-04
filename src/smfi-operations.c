@@ -1,6 +1,14 @@
 #define MILTPRIV  struct privdata *priv = (struct privdata *) smfi_getpriv(ctx);
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <libmilter/mfapi.h>
+#include <glib/gprintf.h>
+#include "prdr-milter.h"
+
+extern int bounce_mode;
+extern unsigned int num_so_modules;
+extern struct so_module **so_modules;
+
 //-----------------------------------------------------------------------------
 static sfsistat
 prdr_connect(SMFICTX *ctx,
@@ -368,7 +376,7 @@ static sfsistat prdr_negotiate(SMFICTX *ctx, unsigned long f0, unsigned long f1,
 }
 */
 //-----------------------------------------------------------------------------
-static struct smfiDesc smfilter =
+struct smfiDesc smfilter =
 {
     "aegee-milter", /* filter name */
     SMFI_VERSION, /* version code -- do not change */

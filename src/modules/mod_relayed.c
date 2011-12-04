@@ -7,7 +7,7 @@
 #define prdr_mod_equal	mod_relayed_LTX_prdr_mod_equal
 
 int
-prdr_mod_status (void* priv)
+prdr_mod_status (void* priv UNUSED)
 {
   return MOD_BODY;
 }
@@ -28,8 +28,7 @@ prdr_mod_run (void* priv)
 }
 
 int
-prdr_mod_equal (const struct privdata* const priv, const char* const user1,
-		const char* const user2)
+prdr_mod_equal (const struct privdata* const priv UNUSED, const char* const user1 UNUSED, const char* const user2 UNUSED)
 {
   return 1;
 }

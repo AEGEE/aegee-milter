@@ -1,5 +1,12 @@
 #ifndef PRDR_LISTS_H
 #define PRDR_LISTS_H
+
+#ifdef __GNUC__
+#define UNUSED __attribute__((__unused__))
+#else
+#define UNUSED
+#endif
+
 //functions for DB modules
 
 //returns 0 on success, -1 if the element was already inside, expire specifies when the entry will be deleted in seconds

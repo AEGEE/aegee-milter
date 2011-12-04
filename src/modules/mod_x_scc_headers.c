@@ -4,7 +4,7 @@
 //these defines facilise dlpreopen later with libtool
 
 int
-mod_x_scc_headers_LTX_prdr_mod_status (void* priv)
+mod_x_scc_headers_LTX_prdr_mod_status (void* priv UNUSED)
 {
   return MOD_BODY;
 }
@@ -24,8 +24,7 @@ mod_x_scc_headers_LTX_prdr_mod_run (void* priv)
 }
 
 int
-mod_x_scc_headers_LTX_prdr_mod_equal (struct privdata* priv, char* user1,
-				      char* user2)
+mod_x_scc_headers_LTX_prdr_mod_equal (struct privdata* priv UNUSED , char* user1 UNUSED, char* user2 UNUSED)
 {
   return 1;
 }

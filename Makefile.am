@@ -24,7 +24,7 @@ libtool: $(LIBTOOL_DEPS)
 
 sbin_PROGRAMS = src/aegee-milter
 
-src_aegee_milter_SOURCES = src/prdr-milter.h src/aegee-milter.c src/helpers.h src/recipient_api.c src/prdr-list.h src/smfi-operations.h
+src_aegee_milter_SOURCES = src/prdr-milter.h src/aegee-milter.c src/helpers.c src/recipient_api.c src/prdr-list.h src/smfi-operations.c
 #src_prdr_milter_DEPENDENCIES = src/LD_DYNAMIC_LIST
 src_aegee_milter_LDFLAGS = ${glib_LIBS} ${gthread_LIBS} $(LIBLTDL)
 #-Wl,--dynamic-list=LD_DYNAMIC_LIST

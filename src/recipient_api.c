@@ -2,6 +2,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+extern unsigned int num_so_modules;
+extern struct so_module **so_modules;
+
 inline void
 prdr_do_fail (struct privdata* const priv)
 {
@@ -456,7 +459,7 @@ char* getdate ()
 //return values: != 0 is error, == 0 is OK
 int
 prdr_sendmail (const char* const from,
-	       char** const rcpt,
+	       const char* const * const rcpt,
 	       const char* const body,
 	       const char* const date,
 	       const char* const autosubmitted)

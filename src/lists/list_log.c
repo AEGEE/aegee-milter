@@ -2,18 +2,18 @@
 #include <glib/gstdio.h>
 #include <string.h>
 #include <time.h>
-
+#include "prdr-list.h"
 extern GKeyFile* prdr_inifile;
 extern char* prdr_section;
 
 static FILE* file = NULL;
 //table == log, user == , key == module, value ==message
 void
-list_log_LTX_prdr_list_insert (const char* const table,
+list_log_LTX_prdr_list_insert (const char* const table UNUSED,
 			       const char* const user,
 			       const char* const key,
 			       const char* const value,
-			       const unsigned int unused)
+			       const unsigned int unused UNUSED)
 {
   if (file) {
     time_t _time = time (NULL);
