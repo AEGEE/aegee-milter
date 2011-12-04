@@ -64,8 +64,8 @@ endif
 #mod_simple_la_LIBADD =
 #mod_simple_la_CFLAGS =
 
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
-pkglib_LTLIBRARIES += src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la
+src_aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
+pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la
 
 if MOD_SIEVE
 src_aegee_milter_LDADD += -dlpreopen src/modules/mod_sieve.la 
@@ -85,6 +85,8 @@ src_lists_list_odbc_la_LDFLAGS = -module -avoid-version -no-undefined -static
 
 src_lists_list_timsieved_scripts_la_LIBADD = ${glib_LIBS}
 src_lists_list_timsieved_scripts_la_LDFLAGS = -module -avoid-version -no-undefined -static
+
+src_modules_mod_block_sender_la_LDFLAGS = -module -avoid-version -static
 
 src_modules_mod_delay_la_LIBADD = ${glib_LIBS}
 src_modules_mod_delay_la_LDFLAGS = -module -avoid-version -static

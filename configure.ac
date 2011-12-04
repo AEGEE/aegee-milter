@@ -33,7 +33,7 @@ dnl AM_CONDITIONAL([MOD_CLAMAV], [test "$check_libclamav" = "yes"])
 AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes"])
 AM_CONDITIONAL([LIST_LISTSERV], [test "$check_liblistserv" = "yes"])
 
-PKG_CHECK_MODULES([libsieve], [libsieve >= 2.3], [check_libsieve=yes], [check_libsieve=no])
+PKG_CHECK_MODULES([libsieve], [libsieve >= 2.2], [check_libsieve=yes], [check_libsieve=no])
 AM_CONDITIONAL([MOD_SIEVE], [test "$check_libsieve" = "yes"])
 
 dnl AX_BERKELEY_DB([4.6.21], [check_libdb=yes], [check_libdb=no])
@@ -55,17 +55,18 @@ echo "
             list_log
             list_timsieved_scripts
 
-
           conditionally built lists:
             list_odbc:               $check_libiodbc
             list_listserv:           $check_liblistserv
 
           modules built by default:
-            mod_via
+            mod_block_sender
             mod_delay
             mod_equal
             mod_relayed
             mod_simple
+            mod_via
+            mod_x_scc_headers
 
           conditionally built modules:
             mod_sieve:               $check_libsieve
