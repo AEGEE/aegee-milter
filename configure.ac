@@ -60,6 +60,7 @@ echo "
             list_listserv:           $check_liblistserv
 
           modules built by default:
+            mod_arf_microsoft
             mod_block_sender
             mod_delay
             mod_equal

@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <liblistserv.h>
+#include <prdr-list.h>
 #include <string.h>
 
 #define LISTSERV_HOME "/home/listserv"
@@ -11,6 +12,32 @@ char *prdr_section;
 static char *email = NULL;
 static char *host = NULL;
 static char *password = NULL;
+
+int
+list_listserv_LTX_prdr_list_remove (const char *table UNUSED, const char *user, 
+			  const char *key) {
+  struct listserv *l = listserv_init (email, password, host);
+  //table -- "listserv"
+  //user -- subscriber to be removed, form "listname-L email"
+  // key 'q' -- quiet, otherwise non-quiet
+  char* cmd;
+  if (key && key[0] == 'q') {
+    //QUIET DEL list email = 12 + strlen(list) + strlen(email)
+    cmd = g_malloc(12 + strlen(user));
+    g_sprintf(cmd, "QUIET DEL %s", user);
+  } else {
+    cmd = g_malloc(6 + strlen(user));
+    g_sprintf(cmd, "DEL %s", user);
+  }
+  char *ret = listserv_command(l, cmd);
+  g_free(cmd);
+  int k;
+  if (strstr("is not subscribed", ret) != NULL)
+    k = -1;
+  else k = 0;
+  listserv_destroy(l);
+  return k;
+}
 
 int
 list_listserv_LTX_load ()
@@ -101,6 +128,21 @@ extract_emails_from (struct listserv* const l,
 }
 #undef add_email
 
+static inline int
+listserv_check_subscriber(const char * const listname,
+			  const char * const emailaddress) {
+  char *query = g_strconcat("QUERY ", emailaddress, " FOR ", listname, NULL);
+  struct listserv *l = listserv_init (email, password, host);
+  char *result = listserv_command (l, query);
+  char ret = result[0];
+  g_free (query);
+  listserv_destroy (l);
+  if (ret == 'T')
+    return 0; //is not subscribed or there is no such list
+  else
+    return 1; //is subscribed
+}
+
 //if key == NULL -> redirect, return all email addresses
 //else check if key is in user
 void*
@@ -111,6 +153,9 @@ list_listserv_LTX_prdr_list_query (const char* const table,
   //return NULL if the element is not found, otherwise the value
   //  g_printf("prdr_list_query table %s, user %s key %s\n", table, user, key);
   if (table == NULL ) return NULL;
+  if (strcmp(table, "listserv-check-subscriber") == 0)
+    return listserv_check_subscriber(user, key) ? "yes" : "no";
+
   char *listname = g_strdup (user);
   char *keyword = "";
   if (strchr (listname, '|') != NULL) {
@@ -146,7 +191,8 @@ list_listserv_LTX_prdr_list_query (const char* const table,
   }
 }
 
-static const char *exported_table[] = { "listserv", NULL };
+static const char * exported_table[] = { "listserv",
+					"listserv-check-subscriber", NULL };
 
 const char**
 list_listserv_LTX_prdr_list_tables ()
