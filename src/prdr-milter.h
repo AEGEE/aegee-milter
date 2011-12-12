@@ -141,9 +141,9 @@ void		prdr_set_priv_rcpt	(struct privdata* priv,
 void*		prdr_get_priv_msg	(const struct privdata* priv);
 void		prdr_set_priv_msg	(struct privdata* const priv,
 					 void* const user);
-char*		getdate ();
+char*		get_date ();
 int		prdr_sendmail(const char* from,
-			      const char* const * const rcpt,
+			      const char* const rcpt[],
 			      const char* body,
 			      const char* date,
 			      const char* autosubmitted);

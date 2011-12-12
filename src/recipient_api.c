@@ -435,7 +435,7 @@ prdr_add_string (struct privdata* const priv, const char* const string)
   return g_string_chunk_insert (priv->gstr, string);
 }
 
-char* getdate ()
+char* get_date ()
 {
   static const char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 				"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
@@ -459,7 +459,7 @@ char* getdate ()
 //return values: != 0 is error, == 0 is OK
 int
 prdr_sendmail (const char* const from,
-	       const char* const * const rcpt,
+	       const char* const rcpt[],
 	       const char* const body,
 	       const char* const date,
 	       const char* const autosubmitted)
@@ -486,7 +486,7 @@ prdr_sendmail (const char* const from,
   FILE *sm = popen (cmdline, "w");
   g_free (cmdline);
   if (sm == NULL) return -1;
-  char *date_ = getdate ();
+  char *date_ = get_date ();
   g_fprintf (sm, "%s: %s\r\n", date, date_);
   g_free (date_);
   if (autosubmitted)

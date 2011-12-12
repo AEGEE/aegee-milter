@@ -255,7 +255,7 @@ sieve_redirect (sieve2_context_t *s, void *my)
 	inet_ntop (AF_INET6, &((struct sockaddr_in6*)(cont->hostaddr))->sin6_addr, IP, 256);
 	break;
   }
-  char* date = getdate ();
+  char* date = get_date ();
   g_string_append_printf (body, "%s [%s]\r\n        by %s id %s;\r\n        %s",
 			  cont->ehlohost, IP, cont->domain_name, 
 			  cont->queue_id, date);
