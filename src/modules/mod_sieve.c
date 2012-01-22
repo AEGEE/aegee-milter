@@ -415,7 +415,7 @@ sieve_notify (sieve2_context_t *s, void *my)
       g_free (headers);
       return SIEVE2_OK;
     }
-
+    if (headers) g_free(headers);
     if (strstr(method, "mailto:") == method) {
       GString *body = g_string_new ("From: AEGEE Mail Team <mail@aegee.org>\r\n");
       char const * const recipient = method + 7;
