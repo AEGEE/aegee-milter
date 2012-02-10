@@ -49,7 +49,7 @@ static inline void email_subscribed_to_list(const char * const email,
 					    char const * const body_text)
 {
   char *temp = g_ascii_strdown (list, -1);
-  char *message = g_strconcat("Hello,\r\n\r\nthe subscriber (in CC:) ", email, " has complained about an email received over the mailing list ", list, " (see attachment).  In turn, ", email, " was removed from ", list, ".\r\n\r\n", email, " can be subscribed again to the list, if the recipient promises not to mark anymore messages as spam.  In order to re-subscribe, go to https://lists.aegee.org/", temp, ".html -> (on the right) Subscribe and Unsubscribe, or send an email to ", list, "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can re-subscribe the address as usual over the listserv web interface.", NULL);
+  char *message = g_strconcat("Hello,\r\n\r\nthe subscriber (in CC:) ", email, " has complained about an email received over the mailing list ", list, " (see attachment).  In turn, ", email, " was removed from ", list, ".\r\n\r\n", email, " can be subscribed again to the list, if the recipient promises not to mark anymore messages as spam.  In order to re-subscribe, go to https://lists.aegee.org/", temp, " -> (on the right) Subscribe and Unsubscribe, or send an email to ", list, "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can re-subscribe the address as usual over the listserv web interface.", NULL);
   g_free (temp);
   int j = 0, recipients_length = strlen(recipients), i;
   for (i=0; i < recipients_length; i++)
@@ -66,8 +66,10 @@ static inline void email_subscribed_to_list(const char * const email,
   rcpts[j++] = (char*)email;
   rcpts[j++] = "mail@aegee.org";
   rcpts[j++] = NULL;
+  char *to = g_strconcat("Listowners ", list, " <", list, "-request@lists.aegee.org>", NULL);
   mmm (g_strconcat("Removal of ", email, " from " , list, NULL),
-       recipients, email, (const char * const*)rcpts, message, body_text);
+       to, email, (const char * const*)rcpts, message, body_text);
+  g_free (to);
   g_free (rcpts);
   g_free (temp);
 }
