@@ -15,7 +15,7 @@ static inline void mmm (char * const subject,
   char const * const boundary_begin = strstr(body_text, "--") + 2;
   char *boundary = g_strndup(boundary_begin,
 			     strchr(boundary_begin, '\r') - boundary_begin);
-  g_string_append_printf(str, "Content-Type:  multipart/mixed; boundary=\"%s\"\r\n\r\n\r\n--%s\r\nContent-Type: text/plain\r\n\r\n%s\r\n\r\nKind regards\r\n  Your AEGEE Mail Team\r\n\r\n  http://mail.aegee.org\r\n  https://lists.aegee.org\r\n  email:mail@aegee.org\r\n  sip:8372@aegee.prg\r\n  +49 162 4091172(m)\r\n%s", boundary, boundary, message, body_text);
+  g_string_append_printf(str, "Content-Type:  multipart/mixed; boundary=\"%s\"\r\n\r\n\r\n--%s\r\nContent-Type: text/plain\r\n\r\n%s\r\n\r\nKind regards\r\n  Your AEGEE Mail Team\r\n\r\n  http://mail.aegee.org\r\n  https://lists.aegee.org\r\n  email:mail@aegee.org\r\n  sip:8372@aegee.prg\r\n  +49 162 4091172(m)\r\n  +49 721 94193270\r\n%s", boundary, boundary, message, body_text);
   g_free(boundary);
   prdr_sendmail("mail@aegee.org", rcpt, str->str, "Date", "auto-generated");
   g_string_free (str, TRUE);
