@@ -29,7 +29,7 @@ static inline void sentmail_not_list_related(char const * const email,
 					     char const * const via,
 					     char const * const body_text)
 {
-  char *message = g_strconcat("Hello Mail Team,\r\n\r\nthere was a complainment about an email sent to ", email, " via \"", via, "\". However \"", via, "\" is not an AEGEE Mailing list.  Please check the attached message (backup of it is available in the arf@aegee.org mailbox) and try to avoid such complainments in the future.", NULL);
+  char *message = g_strconcat("Hello Mail Team,\r\n\r\nthere was a complaint about an email sent to ", email, " via \"", via, "\". However \"", via, "\" is not an AEGEE Mailing list.  Please check the attached message (backup of it is available in the arf@aegee.org mailbox) and try to avoid such complaints in the future.", NULL);
   mmm (g_strconcat(email, " sent from ", via, NULL), 
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
@@ -38,7 +38,7 @@ static inline void email_not_in_list(char const * const email,
 				     char const * const list,
 				     char const * const body_text)
 {
-  char *message = g_strconcat("Hello Mail Team,\r\n\r\nthe attached email to address ", email, " was sent via the mailing list ", list, ", but the email address is currently not subscribed to ", list, ". Please check what is wrong with the email address/list subscription.  There is a copy of the complainment in the arf@aegee.org mailbox.", NULL);
+  char *message = g_strconcat("Hello Mail Team,\r\n\r\nthe attached email to address ", email, " was sent via the mailing list ", list, ", but the email address is currently not subscribed to ", list, ". Please check what is wrong with the email address/list subscription.  There is a copy of the complaint in the arf@aegee.org mailbox.", NULL);
   mmm (g_strconcat(email, " not in ", list, NULL), 
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
