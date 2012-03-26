@@ -132,6 +132,10 @@ mod_arf_microsoft_LTX_prdr_mod_run (void* priv)
 	  char *listname = g_strndup (prefix, suffix - prefix + 2);
 	  remove_email_from_list (sender, listname, body_text->str);
 	  g_free (listname);
+	} else if (strstr (list, "-L@LISTS.AEGEE.ORG") != NULL) {
+	  char *listname = g_strndup (list, strchr (list, '@') - list);
+	  remove_email_from_list (sender, listname, body_text->str);
+	  g_free (listname);
 	} else if (strcasestr (list, "aegee") != NULL)
 	  sentmail_not_list_related(sender, list, body_text->str);
 	g_free (list);
