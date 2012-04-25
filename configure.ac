@@ -10,6 +10,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PROG_AR
 AC_LIBTOOL_DLOPEN
 LT_INIT([disable-shared, dlopen])
 LT_CONFIG_LTDL_DIR([libltdl])
