@@ -63,9 +63,12 @@ endif
 #... = mod_simple.la
 #mod_simple_la_LIBADD =
 #mod_simple_la_CFLAGS =
-
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
-pkglib_LTLIBRARIES += src/modules/mod_arf_microsoft.la src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la
+if LIST_LISTSERV
+src_aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la
+pkglib_LTLIBRARIES += src/modules/mod_arf_microsoft.la
+endif
+src_aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
+pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la
 
 if MOD_SIEVE
 src_aegee_milter_LDADD += -dlpreopen src/modules/mod_sieve.la 

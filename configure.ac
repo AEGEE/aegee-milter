@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.65)
+AC_PREREQ(2.69)
 AC_INIT(aegee-milter, 1.0, aegee-milter@aegee.org)
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2 subdir-objects silent-rules])
 AM_SILENT_RULES([yes])
@@ -56,11 +56,11 @@ echo "
             list_timsieved_scripts
 
           conditionally built lists:
-            list_odbc:               $check_libiodbc
             list_listserv:           $check_liblistserv
+            list_odbc:               $check_libiodbc
+            mod_arf_microsoft        $check_liblistserv
 
           modules built by default:
-            mod_arf_microsoft
             mod_block_sender
             mod_delay
             mod_equal
