@@ -761,7 +761,7 @@ sieve_getscript (sieve2_context_t *s, void *my)
 				       (gpointer*)&temp)) {
       temp = prdr_list_query ("sieve_scripts", prdr_get_recipient (cont),
 			      name);
-      g_hash_table_insert (dat->hashTable, name, temp);
+      g_hash_table_insert (dat->hashTable, (char*)name, temp);
     }
   } else { //the scope is global
     if (*name == '\0' || name == NULL) {
@@ -775,7 +775,7 @@ sieve_getscript (sieve2_context_t *s, void *my)
     if (!g_hash_table_lookup_extended (glob->hashTable, name, NULL,
 				       (gpointer*)&temp)) {
       temp = prdr_list_query ("sieve_scripts", ":global", name);
-      g_hash_table_insert (glob->hashTable, name, temp);
+      g_hash_table_insert (glob->hashTable, (char*)name, temp);
     }
   }
   sieve2_setvalue_string (s, "script", temp);
