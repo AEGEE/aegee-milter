@@ -4,7 +4,7 @@
 
 extern unsigned int num_so_modules;
 extern struct so_module **so_modules;
-
+extern char* sendmail;
 inline void
 prdr_do_fail (struct privdata* const priv)
 {

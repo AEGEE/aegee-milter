@@ -94,7 +94,6 @@ struct recipient {
 };
 
 //int prdr_stage;
-char* sendmail;
 
 //MODULE FLAGS
 #define MOD_EHLO     1

@@ -11,9 +11,9 @@
 #include <stdlib.h>
 
 
-GKeyFile* prdr_inifile;
-static char* sievedir;
-char *prdr_section;
+extern GKeyFile *prdr_inifile;
+static char *sievedir;
+extern char *prdr_section;
 
 int
 list_timsieved_scripts_LTX_load ()

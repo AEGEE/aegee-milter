@@ -8,8 +8,8 @@
 #include "prdr-list.h"
 
 #define UNICODE 1
-GKeyFile* prdr_inifile;
-char* prdr_section;
+extern GKeyFile* prdr_inifile;
+extern char* prdr_section;
 
 static SQLHENV env;
 static SQLHDBC dbc;

@@ -11,7 +11,7 @@ struct so_list **so_lists;
 struct so_module **so_modules;
 static int alarm_period;
 extern const lt_dlsymlist lt_preloaded_symbols[];
-char *prdr_section;
+char* sendmail;
 
 inline static void
 unload_plugins ()

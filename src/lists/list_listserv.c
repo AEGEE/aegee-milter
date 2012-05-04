@@ -6,8 +6,8 @@
 
 #define LISTSERV_HOME "/home/listserv"
 
-GKeyFile* prdr_inifile;
-char *prdr_section;
+extern GKeyFile* prdr_inifile;
+extern char *prdr_section;
 
 static char *email = NULL;
 static char *host = NULL;
