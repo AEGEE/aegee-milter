@@ -34,7 +34,7 @@ dnl AM_CONDITIONAL([MOD_CLAMAV], [test "$check_libclamav" = "yes"])
 AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes"])
 AM_CONDITIONAL([LIST_LISTSERV], [test "$check_liblistserv" = "yes"])
 
-PKG_CHECK_MODULES([libsieve], [libsieve >= 2.2], [check_libsieve=yes], [check_libsieve=no])
+PKG_CHECK_MODULES([libsieve], [libsieve >= 2.3], [check_libsieve=yes], [check_libsieve=no])
 AM_CONDITIONAL([MOD_SIEVE], [test "$check_libsieve" = "yes"])
 
 dnl AX_BERKELEY_DB([4.6.21], [check_libdb=yes], [check_libdb=no])
