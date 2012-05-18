@@ -358,7 +358,7 @@ sieve_reject (sieve2_context_t *s, void *my)
   g_free (message);
   return SIEVE2_OK;
 }
-
+/*
 static int
 sieve_ereject (sieve2_context_t *s, void *my)
 {
@@ -380,6 +380,7 @@ sieve_ereject (sieve2_context_t *s, void *my)
   //g_printf("---sieve_ereject %s---\n", message);
   return SIEVE2_OK;
 }
+*/
 
 static int
 sieve_notify (sieve2_context_t *s, void *my)
@@ -817,20 +818,17 @@ mod_sieve_LTX_prdr_mod_run (void* priv)
 {
   //  g_printf("***sieve_mod_run %p***\n", priv);
   /*
-  int res;
-  sieve2_context_t* context;
-  if (sieve2_alloc (&context)  == SIEVE2_OK)
-    if (sieve2_callbacks (context, sieve_callbacks) == SIEVE2_OK)
-	res = sieve2_execute (context, priv);
-	sieve2_free (&context);
-  //  g_printf("---sieve_mod_run %p---\n",  priv);
 //    prdr_add_header(priv, 0, "X-AEGEE-milter-mod_sieve", "sieve script executed");
-  if (res != SIEVE2_OK)
-    return -1;
-  else
-    return 0; */
+*/
+  int ret = -1;
   struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (priv);
-  if ( sieve2_execute (dat->sieve2_context, priv) != SIEVE2_OK )
+  if (sieve2_alloc (&dat->sieve2_context) == SIEVE2_OK) {
+    sieve2_callbacks (dat->sieve2_context, sieve_callbacks);
+    ret = sieve2_execute (dat->sieve2_context, priv);
+    sieve2_free (&dat->sieve2_context);
+    //  g_printf("---sieve_mod_run %p---\n",  priv);
+  }
+  if (ret != SIEVE2_OK )
     return -1;
   else
     return 0;
@@ -862,8 +860,6 @@ mod_sieve_LTX_prdr_mod_init_rcpt (void* private)
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local *dat = g_malloc0 (sizeof (struct sieve_local));
   dat->redirect_to = g_ptr_array_new_with_free_func (g_free);
-  sieve2_alloc (&dat->sieve2_context);
-  sieve2_callbacks (dat->sieve2_context, sieve_callbacks);
   dat->desired_stages = MOD_RCPT;
   dat->hashTable   = g_hash_table_new_full (g_str_hash, g_str_equal,
 					    NULL, g_free);
@@ -892,7 +888,6 @@ mod_sieve_LTX_prdr_mod_destroy_rcpt (void* private)
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   g_hash_table_destroy (dat->hashTable);
-  sieve2_free (&dat->sieve2_context);
   g_ptr_array_free (dat->redirect_to, TRUE);
   if (dat->headers) {
     g_free (dat->headers);
