@@ -6,6 +6,8 @@
 
 int bounce_mode;
 unsigned int num_tables, num_so_lists, num_so_modules;
+char *prdr_section;
+GKeyFile *prdr_inifile;
 struct list **lists = NULL;
 struct so_list **so_lists;
 struct so_module **so_modules;

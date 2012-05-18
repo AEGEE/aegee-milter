@@ -2,13 +2,13 @@
 #include <glib/gstdio.h>
 #define __USE_GNU 1
 #include "prdr-mod.h"
-#include "prdr-milter.h"
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <ucontext.h>
 
-GKeyFile* prdr_inifile;
+extern GKeyFile *prdr_inifile;
+extern char *prdr_section;
 static gboolean mod_sieve_vacation;
 static int mod_sieve_vacation_days_min = 1;
 static int mod_sieve_vacation_days_default = 7;
@@ -231,7 +231,7 @@ sieve_fileinto (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 */
-int
+static int
 sieve_redirect (sieve2_context_t *s, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
@@ -326,7 +326,7 @@ sieve_redirect (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_discard (sieve2_context_t *s UNUSED, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
@@ -337,7 +337,7 @@ sieve_discard (sieve2_context_t *s UNUSED, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_reject (sieve2_context_t *s, void *my)
 {
   //  g_printf("***sieve_reject %p***\n", s);
@@ -359,7 +359,7 @@ sieve_reject (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_ereject (sieve2_context_t *s, void *my)
 {
   //  g_printf("***sieve_ereject %p***\n", s);
@@ -381,7 +381,7 @@ sieve_ereject (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_notify (sieve2_context_t *s, void *my)
 {
   //  g_printf ("***sieve_notify***\n");
@@ -457,7 +457,7 @@ sieve_notify (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_vacation (sieve2_context_t *s, void *my)
 {
   g_printf("***mod sieve: vacation***\n");
@@ -586,7 +586,7 @@ sieve_vacation (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_keep (sieve2_context_t *s UNUSED, void *my)
 {
   //g_printf("***sieve_keep***\n");
@@ -602,7 +602,7 @@ sieve_keep (sieve2_context_t *s UNUSED, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_getheader (sieve2_context_t *s, void *my)
 {
   //  g_printf("***sieve_getheader***\n");
@@ -636,7 +636,7 @@ sieve_getheader (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_getsubaddress (sieve2_context_t *s, void *my)
 {
   //g_printf("***sieve_getsubaddress***\n");
@@ -664,7 +664,7 @@ sieve_getsubaddress (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_getenvelope (sieve2_context_t *s, void *my)
 {
   //  g_printf("***sieve_getenvelope***\n");
@@ -675,7 +675,7 @@ sieve_getenvelope (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_getbody (sieve2_context_t *s, void *my)
 {
   //g_printf("***sieve_getbody***\n");
@@ -692,7 +692,7 @@ sieve_getbody (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 
-int
+static int
 sieve_getsize (sieve2_context_t *s, void *my)
 {
   //g_printf("***sieve_getsize***\n");
@@ -739,7 +739,7 @@ sieve_extlists (sieve2_context_t *s, void *my)
 }
 */
 
-int
+static int
 sieve_getscript (sieve2_context_t *s, void *my)
 {
   //g_printf("***sieve_getscript***\n");

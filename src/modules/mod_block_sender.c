@@ -1,7 +1,7 @@
 #include "prdr-mod.h"
 #include <time.h>
 
-GKeyFile* prdr_inifile;
+extern GKeyFile* prdr_inifile;
 
 int
 mod_block_sender_LTX_prdr_mod_status (void* priv UNUSED)

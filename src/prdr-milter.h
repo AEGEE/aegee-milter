@@ -104,8 +104,6 @@ struct recipient {
 #define MOD_FAILED   32
 #define RCPT_PRDR_REJECTED 64
 #define RCPT_NOTIFY_NEVER  128
-GKeyFile *prdr_inifile;
-char *prdr_section;
 
 //functions that can be used in the prdr modules, apart from the ones included in prdr-list.h
 //0 -inactive, 1 - active

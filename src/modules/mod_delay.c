@@ -6,7 +6,8 @@ static int delay_ehlo = 0;
 static int delay_mail = 10;
 static int delay_rcpt = 5;
 static int delay_data = 30;
-GKeyFile* prdr_inifile;
+extern GKeyFile* prdr_inifile;
+extern char* prdr_section;
 
 int
 mod_delay_LTX_load ()

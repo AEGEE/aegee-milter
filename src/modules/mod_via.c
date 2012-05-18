@@ -1,8 +1,6 @@
 #include "prdr-mod.h"
 #include <time.h>
 
-GKeyFile* prdr_inifile;
-
 int
 mod_via_LTX_load ()
 {
