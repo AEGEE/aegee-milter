@@ -117,6 +117,7 @@ void		prdr_del_recipient	(struct privdata* priv,
 					 const char* const address);
 int		prdr_get_size		(struct privdata* priv);
 void		prdr_do_fail		(struct privdata* priv);
+int 		prdr_has_failed		(struct privdata* priv);
 char**		prdr_get_header		(struct privdata* priv,
 					 const char* const headerfield);
 GPtrArray*	prdr_get_headers	(const struct privdata *const priv);

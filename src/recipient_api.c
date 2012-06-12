@@ -11,6 +11,12 @@ prdr_do_fail (struct privdata* const priv)
   priv->current_recipient->current_module->flags |= MOD_FAILED;
 }
 
+int
+prdr_has_failed (struct privdata *const priv) {
+  return (priv->current_recipient->current_module->flags & MOD_FAILED)
+    == MOD_FAILED;
+}
+
 //-----------------------------------------------------------------------------
 //j == 0 -- default, j==1 -- active, j == 2 disabled
 //j == 3 not necessary to execute
