@@ -105,6 +105,7 @@ src_modules_mod_relayed_la_LDFLAGS = -module -avoid-version -static
 
 src_modules_mod_sieve_la_LIBADD = ${libsieve_LIBS} ${glib_LIBS} ${gthread_LIBS}
 src_modules_mod_sieve_la_LDFLAGS = -module -avoid-version -static
+src_modules_mod_sieve_la_SOURCES = src/modules/mod_sieve/core.c src/modules/mod_sieve/libsieve.c src/modules/mod_sieve/message.h
 
 src_modules_mod_simple_la_LIBADD = ${glib_LIBS}
 src_modules_mod_simple_la_LDFLAGS = -module -avoid-version -static
