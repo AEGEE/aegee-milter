@@ -69,8 +69,7 @@ typedef enum {
     ACTION_KEEP,
     ACTION_REDIRECT,
     ACTION_DISCARD,
-    ACTION_VACATION,
-    ACTION_NOTIFY
+    ACTION_VACATION
 } action_t;
 
 
@@ -101,13 +100,6 @@ typedef struct sieve_reject_context {
 typedef struct sieve_fileinto_context {
     const char *mailbox;
 } sieve_fileinto_context_t;
-
-typedef struct sieve_notify_context {
-    const char *method;
-    const char **options;
-    const char *priority;
-    const char *message;
-} sieve_notify_context_t;
 
 #define SIEVE_HASHLEN 16
 

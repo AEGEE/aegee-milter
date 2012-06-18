@@ -237,7 +237,6 @@ libsieve_getsubaddress (sieve2_context_t *s, void *my)
 
 static sieve2_callback_t sieve_callbacks[] = {
   { SIEVE2_ACTION_KEEP,           libsieve_keep },
-  //  { SIEVE2_ACTION_NOTIFY,         libsieve_notify },
   { SIEVE2_ACTION_REJECT,         libsieve_reject },
   { SIEVE2_ACTION_DISCARD,        libsieve_discard },
   { SIEVE2_ACTION_REDIRECT,       libsieve_redirect },

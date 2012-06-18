@@ -13,9 +13,6 @@ static gboolean mod_sieve_vacation;
 static int mod_sieve_vacation_days_min = 1;
 static int mod_sieve_vacation_days_default = 7;
 static int mod_sieve_vacation_days_max = 30;
-static gboolean mod_sieve_notify_mailto;// = "true";
-static gboolean mod_sieve_notify_sip;// = "true";
-static gboolean mod_sieve_notify_xmpp;// = "true";
 static gboolean mod_sieve_redirect;// = "true";
 int libsieve_run (void *);
 
@@ -52,7 +49,6 @@ free_action_list(action_list_t *a)
     case ACTION_NONE:
     case ACTION_FILEINTO:
     case ACTION_DISCARD:
-    case ACTION_NOTIFY:
     case ACTION_KEEP: break;
     }
     b = a->next;
@@ -130,9 +126,6 @@ expand_variables_in_string (struct privdata *cont,
 
 int mod_sieve_LTX_load ()
 {
-  mod_sieve_notify_mailto = TRUE;
-  mod_sieve_notify_sip = TRUE;
-  mod_sieve_notify_xmpp = TRUE;
   mod_sieve_redirect = TRUE;
   int vac_err = 0;
   char **array = g_key_file_get_keys (prdr_inifile, prdr_section, NULL, NULL);
@@ -155,21 +148,6 @@ int mod_sieve_LTX_load ()
 								  NULL); } else
       if (strcmp(array[i], "vacation_days_max") == 0) {
 	mod_sieve_vacation_days_max = g_key_file_get_integer (prdr_inifile, prdr_section, "vacation_days_max", NULL); } else
-      if (strcmp(array[i], "notify_mailto") == 0) {
-        mod_sieve_notify_mailto = g_key_file_get_boolean (prdr_inifile,
-							  prdr_section,
-							  "notify_mailto",
-							  NULL); } else
-      if (strcmp (array[i], "notify_sip") == 0) {
-	mod_sieve_notify_sip = g_key_file_get_boolean (prdr_inifile,
-						       prdr_section,
-						       "notify_sip",
-						       NULL); } else
-      if (strcmp (array[i], "notify_xmpp") == 0) {
-	mod_sieve_notify_xmpp = g_key_file_get_boolean (prdr_inifile,
-							prdr_section,
-							"notify_xmpp",
-							NULL); } else
       if (strcmp (array[i], "redirect") == 0) {
 	mod_sieve_redirect = g_key_file_get_boolean (prdr_inifile,
 						     prdr_section,
@@ -435,78 +413,6 @@ sieve_reject (struct sieve_reject_context context, void *my)
   g_free (text);
   return SIEVE2_OK;
 }
-/*
-static int
-sieve_notify (sieve2_context_t *s, void *my)
-{
-  struct privdata *cont = (struct privdata*) my;
-  if (prdr_get_stage (cont) != MOD_BODY) {
-    struct sieve_local *dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-    dat->desired_stages |= MOD_BODY;
-    prdr_do_fail (cont);
-    return SIEVE2_ERROR_FAIL;
-  }
-  //active - otpadnalo
-  //from - lipswa
-  //id  - otpadnalo
-  //importance - lipswa
-  //priority - otpadnalo
-  char const * const method = sieve2_getvalue_string (s, "method");
-  //  char** options = sieve2_getvalue_stringlist (s, "options");
-  char const * const message = sieve2_getvalue_string (s, "message");
-  switch (*method) {
-  case 's': //sip
-    if (mod_sieve_notify_sip == FALSE)
-      return SIEVE2_OK;
-    break;
-  case 'm': //mailto
-    if (mod_sieve_notify_mailto == FALSE)
-      return SIEVE2_OK;
-    char **headers = prdr_get_header (cont, "Auto-Submitted");
-    if (headers && headers[0] && (g_ascii_strcasecmp(headers[0], "No") != 0)) {
-      g_free (headers);
-      return SIEVE2_OK;
-    }
-    if (headers) g_free(headers);
-    if (strstr(method, "mailto:") == method) {
-      GString *body = g_string_new ("From: AEGEE Mail Team <mail@aegee.org>\r\n");
-      char const * const recipient = method + 7;
-      char *temp = strchr(method + 7, '?');
-      if (temp) {
-	temp[0] = '\0';
-	temp++;
-      }
-      while (temp) {
-	char *hname = temp;
-	char *hvalue = strchr(temp, '=');
-	if (g_ascii_strcasecmp (temp, "body") && hvalue)
-	  g_string_append_printf (body, "%s: %s\r\n", hname, hvalue);
-	temp = strchr (hvalue, '&');
-      }
-      g_string_append_printf (body, "To: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", recipient, message);
-      //log
-      char const * const rcpt[]  = {recipient, NULL};
-      char* auto_submitted = g_alloca (strlen (prdr_get_recipient(cont)) + 30);
-      g_sprintf (auto_submitted, "auto-notified; owner-email=\"%s\"",
-		 prdr_get_recipient(cont));
-      prdr_sendmail ("mail@aegee.org", rcpt, body->str,
-		     "Date", auto_submitted);
-      g_string_free (body, TRUE);
-      g_printf ("notifying mailto...\n");
-    }
-    break;
-  case 'x': //xmpp
-    if (mod_sieve_notify_xmpp == FALSE)
-      return SIEVE2_OK;
-    break;
-  case 'z': //zephyr
-    break;
-  default:
-    break;
-  }
-  return SIEVE2_OK;
-}
-*/
 
 static int
 sieve_vacation (struct sieve_autorespond_context autoresp,
@@ -632,7 +538,6 @@ mod_sieve_LTX_prdr_mod_run (void *priv) {
     while (a != NULL) {
       switch (a->a) {
       case ACTION_FILEINTO:
-      case ACTION_NOTIFY:
       case ACTION_NONE:
       case ACTION_NULL:
 	break;
