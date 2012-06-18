@@ -128,8 +128,6 @@ expand_variables_in_string (struct privdata *cont,
   return string2;
 }
 
-#define test_var_subst(x) y = expand_variables_in_string (NULL, x); g_printf ("%s->%s--\n", x, y); free (y);
-
 int mod_sieve_LTX_load ()
 {
   mod_sieve_notify_mailto = TRUE;
