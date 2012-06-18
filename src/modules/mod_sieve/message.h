@@ -12,7 +12,6 @@ struct sieve_local {
   sieve2_context_t *sieve2_context;
   action_list_t *actions;
   action_list_t *last_action;
-  GPtrArray *redirect_to;
 };
 
 /* message.h

@@ -280,7 +280,6 @@ mod_sieve_LTX_prdr_mod_init_rcpt (void* private)
 {
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local *dat = g_malloc0 (sizeof (struct sieve_local));
-  dat->redirect_to = g_ptr_array_new_with_free_func (g_free);
   dat->desired_stages = MOD_RCPT;
   dat->hashTable   = g_hash_table_new_full (g_str_hash, g_str_equal,
 					    NULL, g_free);
@@ -307,7 +306,6 @@ mod_sieve_LTX_prdr_mod_destroy_rcpt (void* private)
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   g_hash_table_destroy (dat->hashTable);
-  g_ptr_array_free (dat->redirect_to, TRUE);
   if (dat->headers) {
     g_free (dat->headers);
     dat->headers = NULL;
@@ -340,8 +338,6 @@ static int
 sieve_redirect (sieve_redirect_context_t context, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
-  struct sieve_local *dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  g_ptr_array_add ( dat->redirect_to, context.addr);
   GString *body = g_string_new ("Received: from ");
   char IP[256];
   switch (cont->hostaddr->sa_family) {
