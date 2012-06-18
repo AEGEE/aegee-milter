@@ -382,42 +382,6 @@ sieve_redirect (sieve_redirect_context_t context, void *my)
   g_string_append_printf (body, "\r\nResent-From: %s\r\nResent-To: ",
 			  prdr_get_envsender (cont));
   char *temp = NULL;
-  /*
-  if (sieve2_getvalue_int (s, "list")) {
-    char *list_plugin = g_strdup context.addr);
-    temp = list_plugin;
-    while (temp[0] && temp[0] != ':') temp++;
-    if (temp[0] == ':') temp[0] = '\0';
-    temp++;
-    char *listname_keyword = temp;
-    temp = prdr_list_query (list_plugin ,// "listserv" ,
-			    listname_keyword, // listserv_list|keyword
-			    NULL);
-    prdr_list_insert ("log", prdr_get_recipient (cont),
-		      "mod_sieve, action redirect, to: ", temp, 0);
-    free (list_plugin);
-    g_string_append_printf (body, "%s\r\n", temp);
-    int i = 0;
-    char *iter = temp;
-    while (iter = strchr (iter, ',')) {
-      i++;
-      iter++;
-    }
-    rcpt = g_malloc (sizeof (char*) * (i+2));
-    rcpt[i+1] = NULL;
-    iter = temp;
-    for (; i >= 0; i--) {
-      rcpt[i] = iter;//FIXME presented addresses shall not be added twice
-      //an address can come more than once in case of circular dependancies
-      //List T1-L: Owner = Onwer(T2-L)   and
-      //List T2-L: Owner = Owner(T1-L)
-      iter = strchr (iter, ',');
-      if (iter) {
-	iter[0]= '\0';
-	iter++;
-      }
-    };
-  } else */ //no list, just @-like address
   char const * const rcpt[] = {context.addr, NULL};
   prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve, action redirect, to: ", rcpt[0], 0);
   g_string_append_printf (body, "%s\r\n", rcpt[0]);
@@ -649,30 +613,6 @@ sieve_keep (void *my)
   prdr_add_recipient (cont, prdr_get_recipient (cont));
   return SIEVE2_OK;
 }
-
-/*
-int
-sieve_extlists (sieve2_context_t *s, void *my)
-{
-  char *list_module, *list_name = sieve2_getvalue_string (s, "list");
-  struct privdata *cont = (struct privdata*) my;
-  //  prdr_list_insert("log", prdr_get_recipient(cont), "sieve_extlists", "sent", 0);
-  if (strchr (list_name, ':')) {
-    list_module = g_strdup (list_name);
-    char *x = strchr (list_module, ':');
-    *x = '\0';
-    list_name = x+1;
-  };
-  char *ret = prdr_list_query (list_module,
-			       list_name,
-			       sieve2_getvalue_string (s, "string"));
-  char *temp = ret ? prdr_add_string (my, ret) : NULL;
-  if (ret) g_free (ret);
-  g_free (list_module);
-  sieve2_setvalue_string (s, "result", temp);
-  return 0;
-}
-*/
 
 int
 mod_sieve_LTX_prdr_mod_run (void *priv) {
