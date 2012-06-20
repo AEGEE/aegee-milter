@@ -105,8 +105,8 @@ expand_variables_in_string (struct privdata *cont,
 	k++;
       if (string[k] == '}') {
 	char *var_name = g_malloc (k- j - s1 - 1);
-        strncpy (var_name, string+j + s1 + 2, k-j- s1 - 2);
-        var_name[k-j-s1-2] = '\0';
+        strncpy (var_name, string + j + s1 + 2, k - j- s1 - 2);
+        var_name[k - j - s1 - 2] = '\0';
 	char *var_value = substitute_named_variable (cont, var_name);
 	g_free (var_name);
 	int var_value_length = strlen (var_value);
@@ -399,14 +399,15 @@ sieve_reject (struct sieve_reject_context context, void *my)
   struct privdata *cont = (struct privdata*) my;
   if (cont->current_recipient->current_module->flags & MOD_FAILED)
     return SIEVE2_ERROR_FAIL;
-  prdr_set_response (cont, "550", "5.7.1",
-		     expand_variables_in_string(cont, context.msg));
+  char *return_text = expand_variables_in_string(cont, context.msg);
+  prdr_set_response (cont, "550", "5.7.1", return_text);
   prdr_del_recipient (cont, prdr_get_recipient (cont));
   char *text = g_strconcat ("from " , prdr_get_envsender (cont),
 			    ", mod_sieve, action reject:", NULL);
   if ( (cont->current_recipient->current_module->flags & MOD_FAILED) == 0)
-    prdr_list_insert ("log", prdr_get_recipient (cont), text, context.msg, 0);
+    prdr_list_insert ("log", prdr_get_recipient (cont), text, return_text, 0);
   g_free (text);
+  g_free (return_text);
   return SIEVE2_OK;
 }
 
