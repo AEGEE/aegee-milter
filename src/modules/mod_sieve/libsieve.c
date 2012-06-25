@@ -12,8 +12,8 @@ libsieve_keep (UNUSED sieve2_context_t *s, void *my) {
     return SIEVE2_ERROR_FAIL;
   }
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;
@@ -27,8 +27,8 @@ static int
 libsieve_reject (sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;
@@ -43,8 +43,8 @@ static int
 libsieve_discard (UNUSED sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;
@@ -64,8 +64,8 @@ libsieve_redirect (sieve2_context_t *s, void *my) {
     prdr_do_fail (cont);
     return SIEVE2_ERROR_FAIL;
   }
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;
@@ -81,8 +81,8 @@ static int
 libsieve_fileinto(UNUSED sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;
@@ -106,8 +106,8 @@ libsieve_vacation (sieve2_context_t *s, void *my)
     return SIEVE2_ERROR_FAIL;
   }
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
-  dat->last_action->next = (action_list_t *) g_malloc(sizeof(action_list_t));
-  action_list_t *a = dat->last_action->next;
+  dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
+  mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
     return SIEVE2_ERROR_FAIL;
   dat->last_action = a;

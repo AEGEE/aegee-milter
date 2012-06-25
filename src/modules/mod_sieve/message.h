@@ -4,14 +4,14 @@
 #include <glib.h>
 #include <sieve2.h>
 
-typedef struct Action action_list_t;
+typedef struct mod_sieve_Action mod_action_list_t;
 struct sieve_local {
   GHashTable* hashTable;
   char **headers;
   int desired_stages;
   sieve2_context_t *sieve2_context;
-  action_list_t *actions;
-  action_list_t *last_action;
+  mod_action_list_t *actions;
+  mod_action_list_t *last_action;
 };
 
 /* message.h
@@ -69,10 +69,10 @@ typedef enum {
     ACTION_REDIRECT,
     ACTION_DISCARD,
     ACTION_VACATION
-} action_t;
+} mod_action_t;
 
 
-typedef struct sieve_vacation {
+typedef struct mod_sieve_vacation {
     int min_response;		/* 0 -> defaults to 3 */
     int max_response;		/* 0 -> defaults to 90 */
 
@@ -83,52 +83,52 @@ typedef struct sieve_vacation {
 
     /* mail the response */
   //    sieve_callback *send_response;
-} sieve_vacation_t;
+} mod_sieve_vacation_t;
 
 
 /* sieve_imapflags: NULL -> defaults to \flagged */
 
-typedef struct sieve_redirect_context {
+typedef struct mod_sieve_redirect_context {
     char *addr;
-} sieve_redirect_context_t;
+} mod_sieve_redirect_context_t;
 
-typedef struct sieve_reject_context {
+typedef struct mod_sieve_reject_context {
     char *msg;
-} sieve_reject_context_t;
+} mod_sieve_reject_context_t;
 
-typedef struct sieve_fileinto_context {
+typedef struct mod_sieve_fileinto_context {
     const char *mailbox;
-} sieve_fileinto_context_t;
+} mod_sieve_fileinto_context_t;
 
 #define SIEVE_HASHLEN 16
 
-typedef struct sieve_autorespond_context {
+typedef struct mod_sieve_autorespond_context {
     char* hash;
     int days;
-} sieve_autorespond_context_t;
+} mod_sieve_autorespond_context_t;
 
-typedef struct sieve_send_response_context {
+typedef struct mod_sieve_send_response_context {
     char *addr;
     char *fromaddr;
     char *msg;
     char *subj;
     int mime;
-} sieve_send_response_context_t;
+} mod_sieve_send_response_context_t;
 
 /* invariant: always have a dummy element when free_action_list, param
    and vac_subj are freed.  none of the others are automatically freed.
 
    the do_action() functions should copy param */
-struct Action {
-    action_t a;
+struct mod_sieve_Action {
+    mod_action_t a;
     union {
-	sieve_reject_context_t rej;
-	sieve_fileinto_context_t fil;
-	sieve_redirect_context_t red;
+	mod_sieve_reject_context_t rej;
+	mod_sieve_fileinto_context_t fil;
+	mod_sieve_redirect_context_t red;
 	struct {
 	    /* addr, fromaddr, subj - freed! */
-	    sieve_send_response_context_t send;
-	    sieve_autorespond_context_t autoresp;
+	    mod_sieve_send_response_context_t send;
+	    mod_sieve_autorespond_context_t autoresp;
 	} vac;
 	struct {
 	    const char *flag;
@@ -136,7 +136,7 @@ struct Action {
     } u;
     int cancel_keep;
     char *param;		/* freed! */
-    struct Action *next;
+    struct mod_sieve_Action *next;
     char *vac_subj;		/* freed! */
     char *vac_msg;
     int vac_days;

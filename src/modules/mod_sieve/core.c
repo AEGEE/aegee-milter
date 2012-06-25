@@ -27,9 +27,9 @@ struct sieve_global {
 };
 
 static void
-free_action_list(action_list_t *a)
+free_action_list(mod_action_list_t *a)
 {
-  action_list_t *b;
+  mod_action_list_t *b;
   while (a) {
     switch (a->a) {
     case ACTION_REDIRECT:
@@ -334,8 +334,9 @@ sieve_fileinto (sieve2_context_t *s, void *my)
   return SIEVE2_OK;
 }
 */
+
 static int
-sieve_redirect (sieve_redirect_context_t context, void *my)
+sieve_redirect (mod_sieve_redirect_context_t context, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
   GString *body = g_string_new ("Received: from ");
@@ -394,7 +395,7 @@ sieve_discard (void *my)
 }
 
 static int
-sieve_reject (struct sieve_reject_context context, void *my)
+sieve_reject (struct mod_sieve_reject_context context, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
   if (cont->current_recipient->current_module->flags & MOD_FAILED)
@@ -412,8 +413,8 @@ sieve_reject (struct sieve_reject_context context, void *my)
 }
 
 static int
-sieve_vacation (struct sieve_autorespond_context autoresp,
-		struct sieve_send_response_context send, void *my)
+sieve_vacation (struct mod_sieve_autorespond_context autoresp,
+		struct mod_sieve_send_response_context send, void *my)
 {
   if (mod_sieve_vacation == FALSE) return SIEVE2_OK;
   struct privdata *cont = (struct privdata*) my;
@@ -521,7 +522,7 @@ int
 mod_sieve_LTX_prdr_mod_run (void *priv) {
 //    prdr_add_header(priv, 0, "X-AEGEE-milter-mod_sieve", "sieve script executed");
   struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (priv);
-  dat->actions = g_malloc(sizeof(action_list_t));
+  dat->actions = g_malloc(sizeof(mod_action_list_t));
   if (dat->actions != NULL) {
 	dat->actions->a = ACTION_NONE;
 	dat->actions->param = NULL;
@@ -531,7 +532,7 @@ mod_sieve_LTX_prdr_mod_run (void *priv) {
   dat->last_action = dat->actions;
   int ret = libsieve_run(priv);
   if (!prdr_has_failed(priv)) {
-    action_list_t *a = dat->actions;
+    mod_action_list_t *a = dat->actions;
     while (a != NULL) {
       switch (a->a) {
       case ACTION_FILEINTO:
