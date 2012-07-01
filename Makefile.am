@@ -3,7 +3,7 @@ AM_LDFLAGS=
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = src/prdr-list.h contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS = -I src/
-AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${gthread_CFLAGS}
+AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS}
 
 pkglib_LTLIBRARIES = 
 noinst_LTLIBRARIES=
@@ -26,7 +26,7 @@ sbin_PROGRAMS = src/aegee-milter
 
 src_aegee_milter_SOURCES = src/prdr-milter.h src/aegee-milter.c src/helpers.c src/recipient_api.c src/prdr-list.h src/smfi-operations.c
 #src_prdr_milter_DEPENDENCIES = src/LD_DYNAMIC_LIST
-src_aegee_milter_LDFLAGS = ${glib_LIBS} ${gthread_LIBS} $(LIBLTDL)
+src_aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL)
 #-Wl,--dynamic-list=LD_DYNAMIC_LIST
 src_aegee_milter_LDADD = 
 # LISTS
@@ -103,7 +103,7 @@ src_modules_mod_equal_la_LDFLAGS = -module -avoid-version -static
 src_modules_mod_relayed_la_LIBADD = ${glib_LIBS}
 src_modules_mod_relayed_la_LDFLAGS = -module -avoid-version -static
 
-src_modules_mod_sieve_la_LIBADD = ${libsieve_LIBS} ${glib_LIBS} ${gthread_LIBS}
+src_modules_mod_sieve_la_LIBADD = ${libsieve_LIBS} ${glib_LIBS}
 src_modules_mod_sieve_la_LDFLAGS = -module -avoid-version -static
 src_modules_mod_sieve_la_SOURCES = src/modules/mod_sieve/core.c src/modules/mod_sieve/libsieve.c src/modules/mod_sieve/message.h
 

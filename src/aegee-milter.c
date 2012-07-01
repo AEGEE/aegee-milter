@@ -325,7 +325,6 @@ main (int argc, char **argv)
   if (smfi_register (smfilter) == MI_FAILURE)
     g_printf ("smfi_register failed, most probably not enough memory\n");
   lt_dlpreload_default (lt_preloaded_symbols);
-  g_thread_init (NULL);
   if (proceed_conf_file (string) != 0) {
     if (i != 1) g_free (string);
     return -10;
