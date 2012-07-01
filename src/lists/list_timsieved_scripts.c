@@ -1,12 +1,13 @@
 //logic: first open default.siv.script.  If it is not available, open the activated script
 
 #include <glib.h>
-#include <string.h>
+#include <glib/gstdio.h>
 #define SIEVEDIR "/usr/sieve"
 #define VIRTDOMAINS 0
-#include <glib/gstdio.h>
-#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #define __USE_GNU
 #include <stdlib.h>
 
@@ -65,7 +66,7 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
     g_string_append_printf (sieve_dir, "/%c/%s/", user2[0], user2);
     g_free (user2);
   };
-  int *f;// file descriptor
+  int f;// file descriptor
   struct stat sb;
   if (*key == '\0') {
     g_string_append_printf (sieve_dir, "default.siv.%s",
@@ -97,7 +98,7 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
     f = stat (sieve_dir->str, &sb);
   }
   if ( (f != -1) && (format == 3) ) return g_string_free (sieve_dir, FALSE);
-  if (f != -1) f = open (sieve_dir->str);
+  if (f != -1) f = open (sieve_dir->str, O_RDONLY, 0);
   g_string_free (sieve_dir, TRUE);
   if (f == -1) return NULL;
   gchar* script_content = g_malloc (sb.st_size + 1);
