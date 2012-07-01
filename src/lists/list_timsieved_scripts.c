@@ -51,7 +51,8 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
   int format = 0;// 1 - script, 2 - bytecode
   if (strcmp (table, "sieve_scripts") == 0) format = 1;
   else if (strcmp (table, "sieve_bytecode") == 0) format = 2;
-  if (table == NULL || strcmp (table, "sieve_scripts")) return NULL;
+  else if (strcmp (table, "sieve_bytecode_path") == 0) format = 3;
+  if (format == 0) return NULL;
   GString *sieve_dir = g_string_new (sievedir);
   if (user == NULL) user = "";
   if (key == NULL) key = "";
@@ -59,17 +60,18 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
     g_string_append_printf (sieve_dir, "/global/");
   } else {
     char *strbuf, *user2 = g_strdup (user);//this will be an user, that has no domain
-    if ((strbuf = strchr (user2, '@'))) strbuf[0] = '\0';
     if ((strbuf = strchr (user2, '+'))) strbuf[0] = '\0';
+    if ((strbuf = strchr (user2, '@'))) strbuf[0] = '\0';
     g_string_append_printf (sieve_dir, "/%c/%s/", user2[0], user2);
     g_free (user2);
   };
-  FILE *f = NULL;
+  int *f;// file descriptor
+  struct stat sb;
   if (*key == '\0') {
     g_string_append_printf (sieve_dir, "default.siv.%s",
 			    format == 1 ? "script": "bc");
-    f = g_fopen (sieve_dir->str, "r");
-    if (!f) {
+    f = stat (sieve_dir->str, &sb);
+    if (f == -1) { // file not found
       //cut default.siv.script, add defaultbc <=> cut .siv.script add bc
       g_string_truncate (sieve_dir,
 			 sieve_dir->len - ((format == 1)?11:7));
@@ -79,29 +81,29 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
       if (temp == NULL) {
 	g_string_free (sieve_dir, TRUE);
 	return NULL;//no default script at all
-      }
-      else {
+      } else {
 	g_string_assign (sieve_dir, temp);
 	g_free (temp);
       }
-      g_string_truncate (sieve_dir, sieve_dir->len -3);
-      g_string_append_printf (sieve_dir, ".%s", format == 1 ? "script" : "bc");
-      f = g_fopen (sieve_dir->str, "r");
+      if (format == 1) {
+	g_string_truncate (sieve_dir, sieve_dir->len - 2);
+	g_string_append_printf (sieve_dir, "script");
+      }
+      f = stat (sieve_dir->str, &sb);
     };
   } else {
     g_string_append (sieve_dir, key);
     g_string_append_printf (sieve_dir, ".%s", format == 1 ? "script" : "bc");
-    f = g_fopen (sieve_dir->str, "r");
+    f = stat (sieve_dir->str, &sb);
   }
+  if ( (f != -1) && (format == 3) ) return g_string_free (sieve_dir, FALSE);
+  if (f != -1) f = open (sieve_dir->str);
   g_string_free (sieve_dir, TRUE);
-  if (!f) return NULL;
-  struct stat sb;
-  int filenum = fileno (f);
-  fstat (filenum, &sb);
+  if (f == -1) return NULL;
   gchar* script_content = g_malloc (sb.st_size + 1);
-  read (filenum, script_content, sb.st_size);
+  read (f, script_content, sb.st_size);
   script_content[sb.st_size] = '\0';
-  fclose (f);
+  close (f);
   //  g_printf("X[%s:%s]\n", user, key);
   return script_content;
   // return g_string_free (sieve_dir, FALSE);
@@ -110,6 +112,6 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
 const char**
 list_timsieved_scripts_LTX_prdr_list_tables ()
 {
-  static const char *exported_table[] = {"sieve_scripts", "sieve_bytecode", NULL};
+  static const char *exported_table[] = {"sieve_scripts", "sieve_bytecode", "sieve_bytecode_path", NULL};
   return exported_table;
 }
