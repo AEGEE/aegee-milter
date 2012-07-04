@@ -14,7 +14,7 @@ mod_via_LTX_prdr_mod_status (void* priv UNUSED)
 }
 
 static inline char*
-received_via (char * received)
+received_via (const char * received)
 {
   char *start = strchr (received, '[');
   if (start) {
@@ -30,7 +30,7 @@ int
 mod_via_LTX_prdr_mod_run (void* priv)
 {
   struct privdata *cont = (struct privdata*) priv;
-  char** received = prdr_get_header (cont, "Received");
+  const char** received = prdr_get_header (cont, "Received");
   if (received && received[0]) {
     char *ip = received_via (received[0]);
     if (ip) {

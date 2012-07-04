@@ -179,7 +179,7 @@ libsieve_getheader (sieve2_context_t *s, void *my)
     return SIEVE2_ERROR_FAIL;
   }
   char const * const header = sieve2_getvalue_string (s, "header");
-  char** ret_headers = prdr_get_header (cont, header);
+  const char** ret_headers = prdr_get_header (cont, header);
   if (ret_headers == NULL || ret_headers[0] == NULL) {
     sieve2_setvalue_stringlist (s, "body", NULL);
     if (ret_headers) g_free (ret_headers);

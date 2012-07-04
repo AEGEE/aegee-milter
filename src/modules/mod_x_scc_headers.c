@@ -15,7 +15,7 @@ int
 mod_x_scc_headers_LTX_prdr_mod_run (void* priv)
 {
   struct privdata *cont = (struct privdata*) priv;
-  char** x_scc_spam_level = prdr_get_header(priv, "X-SCC-Spam-Level");
+  const char** x_scc_spam_level = prdr_get_header(priv, "X-SCC-Spam-Level");
   if (x_scc_spam_level) {
     prdr_list_insert ("log", prdr_get_recipient (cont),
 	    "mod_x_scc_headers, X-SCC-Spam-Level:", *x_scc_spam_level, 0);

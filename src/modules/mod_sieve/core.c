@@ -66,7 +66,7 @@ substitute_named_variable (struct privdata *cont,
   if (strcmp (variable, "envelope.to") == 0)
       return g_strdup (prdr_get_recipient(cont));
   if (strstr(variable, "headers.") == variable) {
-      char **headers;
+      const char **headers;
       if (prdr_get_stage (cont) < MOD_HEADERS ) {
           prdr_do_fail (cont);
 	  struct sieve_local *dat =
@@ -431,7 +431,7 @@ sieve_vacation (struct mod_sieve_autorespond_context autoresp,
     return SIEVE2_OK;
   }
   g_free (temp);
-  char **headers;
+  const char **headers;
   if (prdr_get_stage (cont) >= MOD_HEADERS) {
     /*
     headers = prdr_get_header(cont, "X-Spam-Status");

@@ -7,7 +7,7 @@
 typedef struct mod_sieve_Action mod_action_list_t;
 struct sieve_local {
   GHashTable* hashTable;
-  char **headers;
+  const char **headers;
   int desired_stages;
   sieve2_context_t *sieve2_context;
   mod_action_list_t *actions;

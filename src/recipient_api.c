@@ -181,7 +181,7 @@ prdr_del_recipient (struct privdata* const priv,
 
 
 //-----------------------------------------------------------------------------
-char**
+const char**
 prdr_get_header (struct privdata* const priv, const char* const headerfield)
 {
   //g_printf("***prdr_get_header, %s***\n", headerfield);
@@ -200,7 +200,7 @@ prdr_get_header (struct privdata* const priv, const char* const headerfield)
       break;
   }
   i = 0;
-  char **h = g_malloc (sizeof (char*) * j);
+  const char **h = g_malloc (sizeof (char*) * j);
   for (j = 0; j < priv->msg->headers->len; j++) {
     struct header *h1 =
       (struct header*) g_ptr_array_index (priv->msg->headers, j);
