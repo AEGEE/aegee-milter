@@ -34,7 +34,9 @@ AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes"])
 AM_CONDITIONAL([LIST_LISTSERV], [test "$check_liblistserv" = "yes"])
 
 PKG_CHECK_MODULES([libsieve], [libsieve >= 2.3], [check_libsieve=yes], [check_libsieve=no])
-AM_CONDITIONAL([MOD_SIEVE], [test "$check_libsieve" = "yes"])
+AM_CONDITIONAL([MOD_LIBSIEVE], [test "$check_libsieve" = "yes"])
+PKG_CHECK_MODULES([libcyrus_sieve], [libcyrus_sieve >= 2.5], [check_libcyrus_sieve=yes], [check_libcyrus_sieve=no])
+AM_CONDITIONAL([MOD_CYRUS_SIEVE], [test "$check_libcyrus_sieve" = "yes"])
 
 dnl AX_BERKELEY_DB([4.6.21], [check_libdb=yes], [check_libdb=no])
 dnl AM_CONDITIONAL([LIST_BERKELEY], [test "$check_libdb" = "yes"])

@@ -1,17 +1,15 @@
 #include "src/modules/mod_sieve/message.h"
 #include "prdr-mod.h"
-char *sieve_getscript (char const * const , char const * const , void *);
 
 static int
 libsieve_keep (UNUSED sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
+  struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   if (prdr_get_stage (cont) != MOD_BODY) {
-    struct sieve_local *dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
     return SIEVE2_ERROR_FAIL;
   }
-  struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
@@ -163,7 +161,7 @@ libsieve_getscript (sieve2_context_t *s, void *my) {
     sieve_getscript (
       sieve2_getvalue_string (s, "path"),//path = ":personal", ":global", ""
       sieve2_getvalue_string (s, "name"),//name of the script for the current user
-      my));
+      "sieve_scripts", my));
   return SIEVE2_OK;
 }
 
@@ -185,10 +183,8 @@ libsieve_getheader (sieve2_context_t *s, void *my)
     if (ret_headers) g_free (ret_headers);
     return SIEVE2_OK;
   }
-  if (dat->headers) {
+  if (dat->headers)
     g_free (dat->headers);
-    dat->headers = NULL;
-  }
   int i, j;
   for (j = 0; ret_headers[j]; j++);
   dat->headers = g_malloc (sizeof (char *) * (j+1));
@@ -249,6 +245,16 @@ static sieve2_callback_t sieve_callbacks[] = {
   { SIEVE2_MESSAGE_GETENVELOPE,   libsieve_getenvelope },
   { SIEVE2_MESSAGE_GETSUBADDRESS, libsieve_getsubaddress },
   {0, 0} };
+
+int
+libsieve_load() {
+  return 0;
+}
+
+int
+libsieve_unload() {
+  return 0;
+}
 
 int
 libsieve_run(void *priv) {

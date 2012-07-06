@@ -3,7 +3,7 @@ AM_LDFLAGS=
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = src/prdr-list.h contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS = -I src/
-AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS}
+AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS}
 
 pkglib_LTLIBRARIES = 
 noinst_LTLIBRARIES=
@@ -52,7 +52,7 @@ src_aegee_milter_LDADD += -dlpreopen src/lists/list_odbc.la
 pkglib_LTLIBRARIES += src/lists/list_odbc.la
 endif
 
-if MOD_SIEVE
+if MOD_LIBSIEVE
 src_aegee_milter_LDADD += -dlpreopen src/lists/list_timsieved_scripts.la
 pkglib_LTLIBRARIES += src/lists/list_timsieved_scripts.la
 endif
@@ -67,15 +67,8 @@ if LIST_LISTSERV
 src_aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la
 pkglib_LTLIBRARIES += src/modules/mod_arf_microsoft.la
 endif
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
-pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la
-
-if MOD_SIEVE
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_sieve.la 
-pkglib_LTLIBRARIES += src/modules/mod_sieve.la
-endif
-
-pkglib_LTLIBRARIES += src/modules/mod_simple.la src/modules/mod_via.la src/modules/mod_x_scc_headers.la
+src_aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_sieve.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
+pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la src/modules/mod_sieve.la src/modules/mod_simple.la src/modules/mod_via.la src/modules/mod_x_scc_headers.la
 
 src_lists_list_listserv_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
 src_lists_list_listserv_la_LDFLAGS = -module -avoid-version -no-undefined -static
@@ -103,9 +96,19 @@ src_modules_mod_equal_la_LDFLAGS = -module -avoid-version -static
 src_modules_mod_relayed_la_LIBADD = ${glib_LIBS}
 src_modules_mod_relayed_la_LDFLAGS = -module -avoid-version -static
 
-src_modules_mod_sieve_la_LIBADD = ${libsieve_LIBS} ${glib_LIBS}
+src_modules_mod_sieve_la_LIBADD = ${glib_LIBS}
 src_modules_mod_sieve_la_LDFLAGS = -module -avoid-version -static
-src_modules_mod_sieve_la_SOURCES = src/modules/mod_sieve/core.c src/modules/mod_sieve/libsieve.c src/modules/mod_sieve/message.h
+src_modules_mod_sieve_la_SOURCES = src/modules/mod_sieve/core.c src/modules/mod_sieve/message.h
+
+if MOD_CYRUS_SIEVE
+src_modules_mod_sieve_la_LIBADD += ${libcyrus_sieve_LIBS}
+src_modules_mod_sieve_la_SOURCES += src/modules/mod_sieve/libcyrus_sieve.c
+endif
+
+if MOD_LIBSIEVE
+src_modules_mod_sieve_la_LIBADD += ${libsieve_LIBS}
+src_modules_mod_sieve_la_SOURCES += src/modules/mod_sieve/libsieve.c
+endif
 
 src_modules_mod_simple_la_LIBADD = ${glib_LIBS}
 src_modules_mod_simple_la_LDFLAGS = -module -avoid-version -static

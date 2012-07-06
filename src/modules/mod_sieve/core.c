@@ -14,7 +14,12 @@ static int mod_sieve_vacation_days_min = 1;
 static int mod_sieve_vacation_days_default = 7;
 static int mod_sieve_vacation_days_max = 30;
 static gboolean mod_sieve_redirect;// = "true";
-int libsieve_run (void *);
+int libsieve_run (void*);
+int libsieve_load ();
+int libsieve_unload ();
+int libcyrus_sieve_run (void*);
+int libcyrus_sieve_load ();
+int libcyrus_sieve_unload ();
 
 struct script {
   char* name;
@@ -124,6 +129,12 @@ expand_variables_in_string (struct privdata *cont,
   return string2;
 }
 
+int mod_sieve_LTX_unload ()
+{
+  libcyrus_sieve_unload();
+  return 0;
+}
+
 int mod_sieve_LTX_load ()
 {
   mod_sieve_redirect = TRUE;
@@ -180,6 +191,7 @@ int mod_sieve_LTX_load ()
     g_printf ("--> vacation is disabled\n");
     mod_sieve_vacation = FALSE;
   }
+  libcyrus_sieve_load();
   return 0;
 }
 
@@ -231,7 +243,8 @@ get_default_script_for_recipient (void* my, char* rcpt)
 }
 
 char *
-sieve_getscript (char const *const path, char const * const name, void *my)
+sieve_getscript (char const *const path, char const * const name,
+  char const * const format, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
   char *temp;
@@ -245,8 +258,7 @@ sieve_getscript (char const *const path, char const * const name, void *my)
     struct sieve_local *dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
     if (!g_hash_table_lookup_extended (dat->hashTable, name, NULL,
 				       (gpointer*)&temp)) {
-      temp = prdr_list_query ("sieve_scripts", prdr_get_recipient (cont),
-			      name);
+      temp = prdr_list_query (format, prdr_get_recipient (cont), name);
       g_hash_table_insert (dat->hashTable, (char*)name, temp);
     }
   } else { //the scope is global
@@ -257,7 +269,7 @@ sieve_getscript (char const *const path, char const * const name, void *my)
       (struct sieve_global*) prdr_get_priv_msg (cont);
     if (!g_hash_table_lookup_extended (glob->hashTable, name, NULL,
 				       (gpointer*)&temp)) {
-      temp = prdr_list_query ("sieve_scripts", ":global", name);
+      temp = prdr_list_query (format, ":global", name);
       g_hash_table_insert (glob->hashTable, (char*)name, temp);
     }
   }
@@ -306,10 +318,8 @@ mod_sieve_LTX_prdr_mod_destroy_rcpt (void* private)
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   g_hash_table_destroy (dat->hashTable);
-  if (dat->headers) {
+  if (dat->headers)
     g_free (dat->headers);
-    dat->headers = NULL;
-  }
   g_free (dat);
   return 0;
 }
@@ -330,7 +340,7 @@ sieve_fileinto (sieve2_context_t *s, void *my)
   prdr_add_recipient(cont, prdr_add_string(priv, fileinto));
   g_free(fileinto);
   prdr_del_recipient(cont, prdr_get_recipient(cont));
-//end comment
+  //end comment
   return SIEVE2_OK;
 }
 */
@@ -530,7 +540,7 @@ mod_sieve_LTX_prdr_mod_run (void *priv) {
 	dat->actions->cancel_keep = 0;
   }
   dat->last_action = dat->actions;
-  int ret = libsieve_run(priv);
+  int ret = libcyrus_sieve_run(priv);
   if (!prdr_has_failed(priv)) {
     mod_action_list_t *a = dat->actions;
     while (a != NULL) {
