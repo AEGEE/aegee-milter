@@ -49,11 +49,11 @@ list_timsieved_scripts_LTX_prdr_list_query (const char* const table,
 {
   //return NULL if the element is not found, otherwise the value
   if (table == NULL) return NULL;
-  int format = 0;// 1 - script, 2 - bytecode
+  int format = 0;
   if (strcmp (table, "sieve_scripts") == 0) format = 1;
   else if (strcmp (table, "sieve_bytecode") == 0) format = 2;
   else if (strcmp (table, "sieve_bytecode_path") == 0) format = 3;
-  if (format == 0) return NULL;
+  else return NULL;
   GString *sieve_dir = g_string_new (sievedir);
   if (user == NULL) user = "";
   if (key == NULL) key = "";
