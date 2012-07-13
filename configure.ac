@@ -11,6 +11,15 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AM_PROG_AR
+gl_VISIBILITY
+AH_BOTTOM([#if HAVE_VISIBILITY
+#define EXPORTED __attribute__((__visibility__("default")))
+#define HIDDEN   __attribute__((__visibility__("hidden")))
+#else
+#define EXPORTED
+#define HIDDEN
+#endif])
+
 AC_LIBTOOL_DLOPEN
 LT_INIT([disable-shared, dlopen])
 LT_CONFIG_LTDL_DIR([libltdl])

@@ -1,5 +1,5 @@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
-AM_LDFLAGS=
+AM_LDFLAGS= ${CFLAG_VISIBILITY}
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = src/prdr-list.h contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS = -I src/
