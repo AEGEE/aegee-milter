@@ -1,9 +1,11 @@
 #include "src/modules/mod_sieve/message.h"
 #include <sieve/sieve_interface.h>
+#include "config.h"
 #include "prdr-mod.h"
 
 static sieve_interp_t *i;
 
+EXPORTED
 void fatal(const char *fatal_message, int fatal_code) {
   printf("fatal message: %s, code: %i\n", fatal_message, fatal_code);
 }
@@ -178,7 +180,8 @@ cyrus_get_include(void *script_context, const char *script,
   return 0;
 }
 
-int
+
+HIDDEN int
 libcyrus_sieve_load() {
   sieve_vacation_t cyrus_vacation = {0, 90*24*60*60,
 			cyrus_autorespond, cyrus_send_responce};
@@ -198,7 +201,7 @@ libcyrus_sieve_load() {
   return 0;
 }
 
-int
+HIDDEN int
 libcyrus_sieve_run(void *priv)
 {
   sieve_execute_t *sc = NULL;
@@ -209,7 +212,7 @@ libcyrus_sieve_run(void *priv)
   return 0;
 }
 
-int
+HIDDEN int
 libcyrus_sieve_unload()
 {
   sieve_interp_free(&i);

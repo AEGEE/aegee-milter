@@ -1,3 +1,4 @@
+#include "config.h"
 #include "prdr-list.h"
 #include "prdr-milter.h"
 #include <glib/gprintf.h>
@@ -8,13 +9,13 @@ extern struct list **lists;
 extern struct so_list **so_lists;
 extern struct so_module **so_modules;
 
-inline void
+HIDDEN inline void
 clear_ehlo (struct privdata *priv UNUSED)
 {
 }
 
 //clears all message-oriented data
-inline void
+HIDDEN inline void
 clear_message (struct message* msg)
 {
   if (msg) {
@@ -57,7 +58,7 @@ clear_recipients (struct privdata* const priv)
   }
 }
 
-inline void
+HIDDEN inline void
 clear_module_pool (struct privdata* const priv)
 {
   if (priv->module_pool == NULL) return;
@@ -85,7 +86,7 @@ clear_module_pool (struct privdata* const priv)
 
 //-----------------------------------------------------------------------------
 
-inline void
+HIDDEN inline void
 clear_privdata (struct privdata* const priv)
 {
   //  g_printf ("***clear_privdata %p***\n", priv);
@@ -104,7 +105,7 @@ clear_privdata (struct privdata* const priv)
 }
 //-----------------------------------------------------------------------------
 
-inline int 
+HIDDEN inline int
 inject_response (SMFICTX *ctx,
 		 char* const code,
 		 char* const dsn,
@@ -193,7 +194,7 @@ compact_headers (struct privdata* const priv, unsigned int i)
 }
 
 //-----------------------------------------------------------------------------
-inline sfsistat 
+HIDDEN inline sfsistat
 set_responses (struct privdata* priv)
 {
   //g_printf("***set_responses, num_recipients =%i, num_so_modules =%i***\n", priv->recipients->len, num_so_modules);
