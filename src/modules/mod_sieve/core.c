@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-#include <src/modules/mod_sieve/message.h>
+#include "src/modules/mod_sieve/message.h"
+#include "config.h"
 
 extern GKeyFile *prdr_inifile;
 extern char *prdr_section;
@@ -14,6 +15,7 @@ static int mod_sieve_vacation_days_min = 1;
 static int mod_sieve_vacation_days_default = 7;
 static int mod_sieve_vacation_days_max = 30;
 static gboolean mod_sieve_redirect;// = "true";
+extern const char const * mod_sieve_script_format;
 int libsieve_run (void*);
 int libsieve_load ();
 int libsieve_unload ();
@@ -227,7 +229,7 @@ get_default_script_for_recipient (void* my, char* rcpt)
   char *temp;
   if ( !g_hash_table_lookup_extended (glob->recipients,
 				      rcpt, NULL, (gpointer*)&temp) ) {
-    temp = prdr_list_query ("sieve_scripts",
+    temp = prdr_list_query (mod_sieve_script_format,
 			    (*rcpt == '\0') ? ":global" : rcpt, "");
     g_hash_table_insert (glob->recipients, rcpt, temp);
   }
@@ -242,14 +244,13 @@ get_default_script_for_recipient (void* my, char* rcpt)
   return temp;
 }
 
-char *
-sieve_getscript (char const *const path, char const * const name,
-  char const * const format, void *my)
+HIDDEN char *
+sieve_getscript (char const *const path, char const * const name, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
   char *temp;
-  if ( *path == '\0' || path == NULL || strcmp (path, ":global")) {//the scope is private
-    if (*name == '\0' || name == NULL) {
+  if ( path == NULL || *path == '\0' || strcmp (path, ":global")) {//the scope is private
+    if ( name == NULL || *name == '\0' ) {
       //default script for recipient
       char *def = get_default_script_for_recipient (my, cont->current_recipient->address);
       return def == NULL ?
@@ -258,7 +259,7 @@ sieve_getscript (char const *const path, char const * const name,
     struct sieve_local *dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
     if (!g_hash_table_lookup_extended (dat->hashTable, name, NULL,
 				       (gpointer*)&temp)) {
-      temp = prdr_list_query (format, prdr_get_recipient (cont), name);
+      temp = prdr_list_query (mod_sieve_script_format, prdr_get_recipient (cont), name);
       g_hash_table_insert (dat->hashTable, (char*)name, temp);
     }
   } else { //the scope is global
@@ -269,7 +270,7 @@ sieve_getscript (char const *const path, char const * const name,
       (struct sieve_global*) prdr_get_priv_msg (cont);
     if (!g_hash_table_lookup_extended (glob->hashTable, name, NULL,
 				       (gpointer*)&temp)) {
-      temp = prdr_list_query (format, ":global", name);
+      temp = prdr_list_query (mod_sieve_script_format, ":global", name);
       g_hash_table_insert (glob->hashTable, (char*)name, temp);
     }
   }

@@ -4,6 +4,7 @@
 #include "prdr-mod.h"
 
 static sieve_interp_t *i;
+const char const * mod_sieve_script_format;
 
 EXPORTED
 void fatal(const char *fatal_message, int fatal_code) {
@@ -173,7 +174,7 @@ static int
 cyrus_get_include(void *script_context, const char *script,
 		  int isglobal, char *fpath, size_t size) {
   struct privdata *cont = (struct privdata*) script_context;
-  char *bytecode_path = prdr_list_query ("sieve_bytecode_path",
+  char *bytecode_path = prdr_list_query (mod_sieve_script_format,
       (isglobal == 1 ? ":global" : cont->current_recipient->address), script);
   g_snprintf (fpath, size, "%s", bytecode_path);
   free (bytecode_path);
@@ -183,6 +184,7 @@ cyrus_get_include(void *script_context, const char *script,
 
 HIDDEN int
 libcyrus_sieve_load() {
+  mod_sieve_script_format = "sieve_bytecode_path";
   sieve_vacation_t cyrus_vacation = {0, 90*24*60*60,
 			cyrus_autorespond, cyrus_send_responce};
   sieve_interp_alloc (&i, NULL);
@@ -205,8 +207,8 @@ HIDDEN int
 libcyrus_sieve_run(void *priv)
 {
   sieve_execute_t *sc = NULL;
-  sieve_script_load (sieve_getscript (":personal", NULL,
-				      "sieve_bytecode_path", priv), &sc);
+  printf("loading %s\n", sieve_getscript (":personal", NULL, priv));
+  sieve_script_load (sieve_getscript (":personal", NULL, priv), &sc);
   sieve_execute_bytecode (sc, i, priv, priv);
   sieve_script_unload (&sc);
   return 0;

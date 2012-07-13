@@ -1,6 +1,8 @@
 #include "src/modules/mod_sieve/message.h"
 #include "prdr-mod.h"
 
+const char const * mod_sieve_script_format;
+
 static int
 libsieve_keep (UNUSED sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
@@ -161,7 +163,7 @@ libsieve_getscript (sieve2_context_t *s, void *my) {
     sieve_getscript (
       sieve2_getvalue_string (s, "path"),//path = ":personal", ":global", ""
       sieve2_getvalue_string (s, "name"),//name of the script for the current user
-      "sieve_scripts", my));
+      my));
   return SIEVE2_OK;
 }
 
@@ -248,6 +250,7 @@ static sieve2_callback_t sieve_callbacks[] = {
 
 int
 libsieve_load() {
+  mod_sieve_script_format = "sieve_scripts";
   return 0;
 }
 

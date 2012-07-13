@@ -4,7 +4,7 @@
 #include <glib.h>
 #include <sieve2.h>
 
-char *sieve_getscript (char const * const , char const * const , char const * const, void *);
+char *sieve_getscript (char const * const , char const * const, void *);
 typedef struct mod_sieve_Action mod_action_list_t;
 struct sieve_local {
   GHashTable* hashTable;
