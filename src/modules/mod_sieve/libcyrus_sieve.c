@@ -181,6 +181,16 @@ cyrus_get_include(void *script_context, const char *script,
   return 0;
 }
 
+static int
+cyrus_execute_error(const char* msg, void *interp_context UNUSED, void *script_context, void *message_context UNUSED) {
+  struct privdata *cont = (struct privdata*) script_context;
+  char *text = g_malloc (strlen(msg)+17);
+  sprintf(text, "mode: %u, text: %s", cont->stage, msg);
+  prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve:cyrus", text, 0);
+  g_free(text);
+  return 0;
+}
+
 
 HIDDEN int
 libcyrus_sieve_load() {
@@ -199,7 +209,7 @@ libcyrus_sieve_load() {
   sieve_register_header (i, cyrus_get_header);
   sieve_register_envelope (i, cyrus_get_envelope);
   //sieve_register_body (i, sieve_get_body *f);
-  //sieve_register_execute_error (i, sieve_execute_error *f);
+  sieve_register_execute_error (i, cyrus_execute_error);
   return 0;
 }
 
