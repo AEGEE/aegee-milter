@@ -21,6 +21,7 @@ AH_BOTTOM([#if HAVE_VISIBILITY
 #endif])
 
 AC_LIBTOOL_DLOPEN
+LT_PREREQ([2.4.2])
 LT_INIT([disable-shared, dlopen])
 LT_CONFIG_LTDL_DIR([libltdl])
 LTDL_INIT([nonrecursive])
