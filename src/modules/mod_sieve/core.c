@@ -18,10 +18,8 @@ static gboolean mod_sieve_redirect;// = "true";
 extern const char const * mod_sieve_script_format;
 int libsieve_run (void*);
 int libsieve_load ();
-int libsieve_unload ();
 int libcyrus_sieve_run (void*);
 int libcyrus_sieve_load ();
-int libcyrus_sieve_unload ();
 
 struct script {
   char* name;
@@ -131,12 +129,6 @@ expand_variables_in_string (struct privdata *cont,
   return string2;
 }
 
-int mod_sieve_LTX_unload ()
-{
-  libcyrus_sieve_unload();
-  return 0;
-}
-
 int mod_sieve_LTX_load ()
 {
   mod_sieve_redirect = TRUE;
@@ -193,6 +185,7 @@ int mod_sieve_LTX_load ()
     g_printf ("--> vacation is disabled\n");
     mod_sieve_vacation = FALSE;
   }
+  //  libsieve_load();
   libcyrus_sieve_load();
   return 0;
 }
@@ -541,6 +534,7 @@ mod_sieve_LTX_prdr_mod_run (void *priv) {
 	dat->actions->cancel_keep = 0;
   }
   dat->last_action = dat->actions;
+  //  int ret = libsieve_run(priv);
   int ret = libcyrus_sieve_run(priv);
   if (!prdr_has_failed(priv)) {
     mod_action_list_t *a = dat->actions;

@@ -3,7 +3,6 @@
 #include "config.h"
 #include "prdr-mod.h"
 
-static sieve_interp_t *i;
 const char const * mod_sieve_script_format;
 
 EXPORTED
@@ -195,7 +194,14 @@ cyrus_execute_error(const char* msg, void *interp_context UNUSED, void *script_c
 HIDDEN int
 libcyrus_sieve_load() {
   mod_sieve_script_format = "sieve_bytecode_path";
-  sieve_vacation_t cyrus_vacation = {0, 90*24*60*60,
+  return 0;
+}
+
+HIDDEN int
+libcyrus_sieve_run(void *priv)
+{
+  sieve_interp_t *i;
+  static sieve_vacation_t cyrus_vacation = {0, 90*24*60*60,
 			cyrus_autorespond, cyrus_send_responce};
   sieve_interp_alloc (&i, NULL);
   sieve_register_redirect (i, cyrus_redirect);
@@ -210,23 +216,12 @@ libcyrus_sieve_load() {
   sieve_register_envelope (i, cyrus_get_envelope);
   //sieve_register_body (i, sieve_get_body *f);
   sieve_register_execute_error (i, cyrus_execute_error);
-  return 0;
-}
 
-HIDDEN int
-libcyrus_sieve_run(void *priv)
-{
   sieve_execute_t *sc = NULL;
   printf("loading %s\n", sieve_getscript (":personal", NULL, priv));
   sieve_script_load (sieve_getscript (":personal", NULL, priv), &sc);
   sieve_execute_bytecode (sc, i, priv, priv);
   sieve_script_unload (&sc);
-  return 0;
-}
-
-HIDDEN int
-libcyrus_sieve_unload()
-{
   sieve_interp_free(&i);
   return 0;
 }

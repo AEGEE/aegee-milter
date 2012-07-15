@@ -117,7 +117,6 @@ prdr_get_recipients (const struct privdata* const priv)
 void
 prdr_add_recipient (struct privdata* const priv, const char* const address)
 {
-  //g_printf("***prdr_add_recipient***\n");
   if (address == NULL) return;
   char** x = priv->current_recipient->current_module->msg->envrcpts;
   //x[0] == 1 indicates, that the original recipient was excluded from the delivery
@@ -148,7 +147,6 @@ prdr_add_recipient (struct privdata* const priv, const char* const address)
     = g_string_chunk_insert (priv->gstr, address);
   priv->current_recipient->current_module->msg->envrcpts[i+1] = NULL;
   }
-  //g_printf("---prdr_add_recipient---\n");
 };
 
 //-----------------------------------------------------------------------------
@@ -156,7 +154,6 @@ void
 prdr_del_recipient (struct privdata* const priv,
 		    const char* const address)
 {
-  //g_printf("***prdr_del_recipient***\n");
   if (address == NULL) return;
   char** x = priv->current_recipient->current_module->msg->envrcpts;
   if (g_ascii_strcasecmp (address, priv->current_recipient->address) == 0) {
@@ -176,7 +173,6 @@ prdr_del_recipient (struct privdata* const priv,
       break;
     }
   }
-  //g_printf("---prdr_del_recipient---\n");
 };
 
 

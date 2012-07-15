@@ -255,11 +255,6 @@ libsieve_load() {
 }
 
 int
-libsieve_unload() {
-  return 0;
-}
-
-int
 libsieve_run(void *priv) {
   struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (priv);
   if (sieve2_alloc (&dat->sieve2_context) == SIEVE2_OK) {
