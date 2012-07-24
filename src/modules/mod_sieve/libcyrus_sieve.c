@@ -218,7 +218,6 @@ libcyrus_sieve_run(void *priv)
   sieve_register_execute_error (i, cyrus_execute_error);
 
   sieve_execute_t *sc = NULL;
-  printf("loading %s\n", sieve_getscript (":personal", NULL, priv));
   sieve_script_load (sieve_getscript (":personal", NULL, priv), &sc);
   sieve_execute_bytecode (sc, i, priv, priv);
   sieve_script_unload (&sc);

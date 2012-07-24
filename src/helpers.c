@@ -197,7 +197,6 @@ compact_headers (struct privdata* const priv, unsigned int i)
 HIDDEN inline sfsistat
 set_responses (struct privdata* priv)
 {
-  //g_printf("***set_responses, num_recipients =%i, num_so_modules =%i***\n", priv->recipients->len, num_so_modules);
   unsigned int j, k = 0, n, p;
   //  char *temp;
   int i = -2, m;
@@ -223,7 +222,6 @@ set_responses (struct privdata* priv)
       }
     }
   }//end for j
-  //g_printf("***set_responses A***\n");
   //proceed global modules
 
   //add global headers
@@ -257,14 +255,12 @@ set_responses (struct privdata* priv)
       }
   }
 
-  //g_printf("***set_responses B, i=%i***\n", i);
   switch (i) {
   case 0://all modules accept the message
     //g_printf("set_responses: all modules accept the message\n");
     i = SMFIS_CONTINUE;
     break;
   case -1://modules disagree on total acceptance/rejection
-    //g_printf("set_responses: modules disagree on total acceptance/rejection\n");
     if (priv->prdr_supported) {
       /*
       //prdr is suppored
@@ -309,11 +305,9 @@ set_responses (struct privdata* priv)
       g_free (xcodes);
       */
     } else {
-      //g_printf("***set_responses B1 prdr is NOT supported***\n");
       switch (bounce_mode) {
 	//case '0': delayed -- cannot happen -- in this mode all recipients agree on the final result
         case '1': //pseudo_delayed
-	  //g_printf("***set_responses C bounce_mode =1***\n");
 	//check what the first recipient thinks
 	  j = 0;
 	  struct recipient *rec = g_ptr_array_index (priv->recipients, 0);
@@ -330,7 +324,6 @@ set_responses (struct privdata* priv)
 	    inject_response (priv->ctx, "250", "2.1.5", "Message accepted");
 	  break;
         case '2': //NDR
-	  //g_printf("***set_responses D bounce_mode =2***\n");
         case '3': ;//no-NDR
 	  //g_printf("***set_responses E bounce_mode =3***\n");
 	  i = SMFIS_CONTINUE;
@@ -338,9 +331,7 @@ set_responses (struct privdata* priv)
     }
     break;
   default: ;
-    //g_printf("***set_responses F bounce_mode***\n");
     //i > 0, every recipient thinks this message must be rejected
-    //g_printf("set_responses: every recipient thinks this message must be rejected, j=%i, k=%i\n", j, k);
     struct recipient *rec = g_ptr_array_index (priv->recipients, j-1);
     inject_response (priv->ctx, rec->modules[k]->return_code,
 		     rec->modules[k]->return_dsn,
@@ -383,7 +374,7 @@ apply_modules (struct privdata* priv)
 	if (priv->current_recipient->current_module->msg->envrcpts) {
 	  int k = 1;
 	  while (priv->current_recipient->current_module->msg->envrcpts[k])
-	    g_free (priv->current_recipient->current_module->msg->envrcpts[k++]);
+	    g_free (priv->current_recipient->current_module->msg->envrcpts[k++]);//suspicious freeing -- the recipients were added with g_string_chunk_insert
 	  g_free (priv->current_recipient->current_module->msg->envrcpts);
 	  priv->current_recipient->current_module->msg->envrcpts = NULL;
 	}
