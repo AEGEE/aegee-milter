@@ -57,7 +57,7 @@ cyrus_redirect (void *action_context, void *interp_context UNUSED,
   dat->last_action = a;
   a->a = ACTION_REDIRECT;
   a->cancel_keep = 1;
-  a->u.red.addr = g_strdup ((char*)action_context);
+  a->u.red.addr = g_strdup (((mod_sieve_redirect_context_t*)action_context)->addr);
   a->next = NULL;  
   return 0;
 }
@@ -75,7 +75,7 @@ cyrus_reject (void *action_context, void *interp_context UNUSED,
   dat->last_action = a;
   a->a = ACTION_REJECT;
   a->cancel_keep = 1;
-  a->u.rej.msg = g_strdup ((char*)action_context);
+  a->u.rej.msg = g_strdup (((mod_sieve_reject_context_t*)action_context)->msg);
   a->next = NULL;
   return 0;
 }
