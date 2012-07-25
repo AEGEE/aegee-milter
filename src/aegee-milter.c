@@ -15,7 +15,7 @@ static int alarm_period;
 extern const lt_dlsymlist lt_preloaded_symbols[];
 char* sendmail;
 
-inline static void
+inline void
 unload_plugins ()
 {
   unsigned int i;
@@ -46,7 +46,7 @@ unload_plugins ()
   lt_dlexit ();
 }
 
-inline static int
+inline int
 load_plugins ()
 {
   lt_dlinit();

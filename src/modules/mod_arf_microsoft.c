@@ -2,7 +2,7 @@
 #include "prdr-mod.h"
 #include <glib/gstdio.h>
 
-static inline void mmm (char * const subject,
+inline void mmm (char * const subject,
 		 char const * const to,
 		 char const * const cc,
 		 const char* const rcpt[],
@@ -25,7 +25,7 @@ static inline void mmm (char * const subject,
 
 static char const * const rcpt[] = {"mail@aegee.org", NULL};
 
-static inline void sentmail_not_list_related(char const * const email,
+inline void sentmail_not_list_related(char const * const email,
 					     char const * const via,
 					     char const * const body_text)
 {
@@ -34,7 +34,7 @@ static inline void sentmail_not_list_related(char const * const email,
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
 
-static inline void email_not_in_list(char const * const email,
+inline void email_not_in_list(char const * const email,
 				     char const * const list,
 				     char const * const body_text)
 {
@@ -43,7 +43,7 @@ static inline void email_not_in_list(char const * const email,
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
 
-static inline void email_subscribed_to_list(const char * const email,
+inline void email_subscribed_to_list(const char * const email,
 					    char const * const list,
 					    char const * const recipients,
 					    char const * const body_text)
@@ -74,7 +74,7 @@ static inline void email_subscribed_to_list(const char * const email,
   g_free (temp);
 }
 
-static inline void remove_email_from_list(char const * const email,
+inline void remove_email_from_list(char const * const email,
 					  char const * const list,
 					  char const * const body_text) {
   char *temp = g_strconcat ("sender<", email, ">listname<", list,">", NULL);

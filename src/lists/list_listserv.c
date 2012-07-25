@@ -128,7 +128,7 @@ extract_emails_from (struct listserv* const l,
 }
 #undef add_email
 
-static inline int
+inline int
 listserv_check_subscriber(const char * const listname,
 			  const char * const emailaddress) {
   char *query = g_strconcat("QUERY ", emailaddress, " FOR ", listname, NULL);

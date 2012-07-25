@@ -62,7 +62,7 @@ free_action_list(mod_action_list_t *a)
   }
 }
 
-static inline char*
+HIDDEN inline char*
 substitute_named_variable (struct privdata *cont,
 			   char* variable)
 {
@@ -92,7 +92,7 @@ substitute_named_variable (struct privdata *cont,
   return g_strdup ("");
 }
 
-static inline char*
+HIDDEN inline char*
 expand_variables_in_string (struct privdata *cont,
 			    const char * const string)
 {
