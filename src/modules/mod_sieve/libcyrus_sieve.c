@@ -53,7 +53,7 @@ cyrus_redirect (void *action_context, void *interp_context UNUSED,
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
-    return -1;
+    return SIEVE_NOMEM;
   dat->last_action = a;
   a->a = ACTION_REDIRECT;
   a->cancel_keep = 1;
@@ -71,7 +71,7 @@ cyrus_reject (void *action_context, void *interp_context UNUSED,
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
-    return -1;
+    return SIEVE_NOMEM;
   dat->last_action = a;
   a->a = ACTION_REJECT;
   a->cancel_keep = 1;
@@ -94,7 +94,7 @@ cyrus_keep (void *action_context UNUSED, void *interp_context UNUSED,
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
-    return SIEVE2_ERROR_FAIL;
+    return SIEVE_NOMEM;
   dat->last_action = a;
   a->a = ACTION_KEEP;
   a->cancel_keep = 1;
@@ -110,7 +110,7 @@ cyrus_discard (void *action_context UNUSED, void *interp_context UNUSED,
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
   if (a == NULL)
-    return -1;
+    return SIEVE_NOMEM;
   dat->last_action = a;
   a->a = ACTION_DISCARD;
   a->cancel_keep = 1;
