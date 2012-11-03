@@ -1,10 +1,12 @@
 #include "prdr-milter.h"
 #include <glib.h>
 #include <glib/gstdio.h>
+#include "config.h"
 
 extern unsigned int num_so_modules;
 extern struct so_module **so_modules;
 extern char* sendmail;
+
 inline void
 prdr_do_fail (struct privdata* const priv)
 {
@@ -78,16 +80,13 @@ prdr_get_recipients (const struct privdata* const priv)
     if ((priv->current_recipient->modules[j]->msg->envrcpts != NULL)
         && (prdr_get_activity (priv, so_modules[j]->name) == 0) //module is active
         && ((priv->current_recipient->flags & MOD_FAILED) == 0)) {
-      if (priv->current_recipient->modules[j]->msg->envrcpts[0] == (char*)1) 
-	i = 1;//delete original recipient
-      else if (priv->current_recipient->modules[j]->msg->envrcpts[0]
-	       == (char*)2)
-	i = 0;//keep original recipient
-      k = 1;
-      while (priv->current_recipient->modules[j]->msg->envrcpts[k] &&
-	     (priv->current_recipient->modules[j]->msg->envrcpts[k++] 
-	      != (char*)1))
+      k = 0;
+      while (priv->current_recipient->modules[j]->msg->envrcpts[k++])
 	c++;
+      if (priv->current_recipient->modules[j]->msg->deletemyself == 0 
+	  && i == 0)
+	c++;
+      else i = 1;
     }
     if (priv->current_recipient->modules[j]
 	== priv->current_recipient->current_module)
@@ -101,15 +100,16 @@ prdr_get_recipients (const struct privdata* const priv)
     if ((priv->current_recipient->modules[j]->msg->envrcpts != NULL) &&
 	(prdr_get_activity (priv, so_modules[j]->name) == 0) && //module is active
 	((priv->current_recipient->flags & MOD_FAILED) == 0)) {
-      k = 1;
-      while (priv->current_recipient->modules[j]->msg->envrcpts[k] != NULL)
-	if (priv->current_recipient->modules[j]->msg->envrcpts[k++] != (char*)1 &&
-	    (priv->current_recipient->modules[j]->flags & MOD_FAILED) == 0)
+      k = 0;
+      while (priv->current_recipient->modules[j]->msg->envrcpts[k++] != NULL)
+	if ((priv->current_recipient->modules[j]->flags & MOD_FAILED) == 0)
 	  ret[c++] = priv->current_recipient->modules[j]->msg->envrcpts[k-1];
+      if (priv->current_recipient->modules[j]
+	  == priv->current_recipient->current_module)
+	break;
     }
   }
   ret[c] = NULL;
-  //g_printf("---prdr_get_recipients, c=%i---\n", c);
   return ret;
 }
 
@@ -119,35 +119,26 @@ prdr_add_recipient (struct privdata* const priv, const char* const address)
 {
   if (address == NULL) return;
   char** x = priv->current_recipient->current_module->msg->envrcpts;
-  //x[0] == 1 indicates, that the original recipient was excluded from the delivery
-  //x[0] == NULL indicates, that the original recipient was not touched (is included)
-  //x[0] == 2 means that the recipient was explicitly added
+  //x[0] is indication for the original recipient
   if (g_ascii_strcasecmp (address, priv->current_recipient->address) == 0) {
-    if (x == NULL) {
-      x = g_malloc (2 * sizeof(char *));
-      x[0] = (char*)2;
-      x[1] = NULL;
-      priv->current_recipient->current_module->msg->envrcpts = x;
-    } else
-      x[0] = (char*)2;
+    priv->current_recipient->current_module->msg->deletemyself = 0;
   } else if (x == NULL) {
-    x = g_malloc (3 * sizeof (char*));
-    x[0] = (char*)2;
-    x[1] = g_string_chunk_insert (priv->gstr, address);
-    x[2] = NULL;
+    x = g_malloc (2 * sizeof (char*));
+    x[0] = g_string_chunk_insert (priv->gstr, address);
+    x[1] = NULL;
     priv->current_recipient->current_module->msg->envrcpts = x;
   } else {
-  int i=1;
-  //check if the address is not already included
-  while (x[i])
-    if (g_ascii_strcasecmp (x[i++], address) == 0) return;//it is already included
-  priv->current_recipient->current_module->msg->envrcpts =
-    (char**)g_realloc (x, (2+i) * sizeof (char*));
-  priv->current_recipient->current_module->msg->envrcpts[i]
-    = g_string_chunk_insert (priv->gstr, address);
-  priv->current_recipient->current_module->msg->envrcpts[i+1] = NULL;
+    int i=0;
+    //check if the address is not already included
+    while (x[i])
+      if (g_ascii_strcasecmp (x[i++], address) == 0) return;//it is already included
+    //add the recipient at the end
+    x = (char**)g_realloc (x, (2+i) * sizeof (char*));
+    x[i] = g_string_chunk_insert (priv->gstr, address);
+    x[i+1] = NULL;
+    priv->current_recipient->current_module->msg->envrcpts = x;
   }
-};
+}
 
 //-----------------------------------------------------------------------------
 void
@@ -155,23 +146,21 @@ prdr_del_recipient (struct privdata* const priv,
 		    const char* const address)
 {
   if (address == NULL) return;
-  char** x = priv->current_recipient->current_module->msg->envrcpts;
   if (g_ascii_strcasecmp (address, priv->current_recipient->address) == 0) {
-    if (x == NULL) {
-      x = g_malloc (2 * sizeof (char*));
-      x[0] = (char*)1;
-      x[1] = NULL;
-      priv->current_recipient->current_module->msg->envrcpts = x;
-    } else
-      x[0] = (char*)1;
+    priv->current_recipient->current_module->msg->deletemyself = 1;
   } else {
-  int i = 1;
-  while(x[i])
-    if (g_ascii_strcasecmp (x[i++], address) == 0) {
-      g_free (x[i-1]);
-      x[i-1] = (char*)1;
-      break;
-    }
+    char** x = priv->current_recipient->current_module->msg->envrcpts;
+    int i = 0;
+    while(x[i])
+      if (g_ascii_strcasecmp (x[i++], address) == 0) {
+	//delete the recipient at index i-1, move the last reciepient here
+	int j = i;
+	while (x[j]) j++;
+	//x[j-1] is now the last reciepient
+	if (i != j)  x[i-1] = x[j-1];
+	x[j-1] = NULL;
+	break;
+      }
   }
 };
 

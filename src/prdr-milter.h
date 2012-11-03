@@ -21,6 +21,7 @@ struct header{
 
 struct message {
   char* envfrom;
+  char deletemyself;
   char** envrcpts;
   //  struct header **headers;
   GPtrArray* headers;
