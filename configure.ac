@@ -5,7 +5,7 @@ AC_PREREQ(2.69)
 AC_INIT(aegee-milter, 1.0, aegee-milter@aegee.org)
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2 subdir-objects silent-rules])
 AM_SILENT_RULES([yes])
-AC_CONFIG_SRCDIR([src/aegee-milter.c])
+AC_CONFIG_SRCDIR([src/core/aegee-milter.c])
 AC_CONFIG_MACRO_DIR([m4])
 # Checks for programs.
 AC_PROG_CC

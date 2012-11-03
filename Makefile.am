@@ -1,8 +1,8 @@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 AM_LDFLAGS= ${CFLAG_VISIBILITY}
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = src/prdr-list.h contrib/sm8.14.3-prdr.diff
-AM_CPPFLAGS = -I src/
+EXTRA_DIST = src/core/prdr-list.h contrib/sm8.14.3-prdr.diff
+AM_CPPFLAGS = -I src
 AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS}
 
 pkglib_LTLIBRARIES = 
@@ -22,38 +22,38 @@ libtool: $(LIBTOOL_DEPS)
 
 #install-exec-hook: killall -SIGHUP aegee-prdr
 
-sbin_PROGRAMS = src/aegee-milter
+sbin_PROGRAMS = aegee-milter
 
-src_aegee_milter_SOURCES = src/prdr-milter.h src/aegee-milter.c src/helpers.c src/recipient_api.c src/prdr-list.h src/smfi-operations.c
+aegee_milter_SOURCES = src/prdr-milter.h src/prdr-list.h src/core/aegee-milter.c src/core/helpers.c src/core/recipient_api.c src/core/smfi-operations.c
 #src_prdr_milter_DEPENDENCIES = src/LD_DYNAMIC_LIST
-src_aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL)
+aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL)
 #-Wl,--dynamic-list=LD_DYNAMIC_LIST
-src_aegee_milter_LDADD = 
+aegee_milter_LDADD = 
 # LISTS
 
 #... = list_simple.la
-#src_aegee_prdr_LDADD += -dlpreopen src/lists/simple.la
+#aegee_prdr_LDADD += -dlpreopen src/lists/simple.la
 #src_lists_simple_la_LIBADD = ${libconfig_LIBS}
 #src_lists_simple_la_CFLAGS = ${libconfig_CFLAGS}
 #src_lists_simple_la_LFDLAGS = -module -avoid-version -no-undefined -static
 
 if LIST_LISTSERV
-src_aegee_milter_LDADD += -dlpreopen src/lists/list_listserv.la
+aegee_milter_LDADD += -dlpreopen src/lists/list_listserv.la
 pkglib_LTLIBRARIES += src/lists/list_listserv.la
 endif
 
 if LIST_LOG
-src_aegee_milter_LDADD += -dlpreopen src/lists/list_log.la
+aegee_milter_LDADD += -dlpreopen src/lists/list_log.la
 pkglib_LTLIBRARIES += src/lists/list_log.la
 endif
 
 if LIST_ODBC
-src_aegee_milter_LDADD += -dlpreopen src/lists/list_odbc.la
+aegee_milter_LDADD += -dlpreopen src/lists/list_odbc.la
 pkglib_LTLIBRARIES += src/lists/list_odbc.la
 endif
 
 if MOD_LIBSIEVE
-src_aegee_milter_LDADD += -dlpreopen src/lists/list_timsieved_scripts.la
+aegee_milter_LDADD += -dlpreopen src/lists/list_timsieved_scripts.la
 pkglib_LTLIBRARIES += src/lists/list_timsieved_scripts.la
 endif
 
@@ -64,10 +64,10 @@ endif
 #mod_simple_la_LIBADD =
 #mod_simple_la_CFLAGS =
 if LIST_LISTSERV
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la
+aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la
 pkglib_LTLIBRARIES += src/modules/mod_arf_microsoft.la
 endif
-src_aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_sieve.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
+aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_sieve.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
 pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la src/modules/mod_sieve.la src/modules/mod_simple.la src/modules/mod_via.la src/modules/mod_x_scc_headers.la
 
 src_lists_list_listserv_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
