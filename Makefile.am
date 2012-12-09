@@ -64,8 +64,8 @@ endif
 #mod_simple_la_LIBADD =
 #mod_simple_la_CFLAGS =
 if LIST_LISTSERV
-aegee_milter_LDADD += -dlpreopen src/modules/mod_arf_microsoft.la
-pkglib_LTLIBRARIES += src/modules/mod_arf_microsoft.la
+aegee_milter_LDADD += -dlpreopen src/modules/mod_arf.la
+pkglib_LTLIBRARIES += src/modules/mod_arf.la
 endif
 aegee_milter_LDADD += -dlpreopen src/modules/mod_block_sender.la -dlpreopen src/modules/mod_delay.la -dlpreopen src/modules/mod_equal.la  -dlpreopen src/modules/mod_relayed.la -dlpreopen src/modules/mod_sieve.la -dlpreopen src/modules/mod_simple.la -dlpreopen src/modules/mod_via.la -dlpreopen src/modules/mod_x_scc_headers.la
 pkglib_LTLIBRARIES += src/modules/mod_block_sender.la src/modules/mod_delay.la  src/modules/mod_equal.la src/modules/mod_relayed.la src/modules/mod_sieve.la src/modules/mod_simple.la src/modules/mod_via.la src/modules/mod_x_scc_headers.la
@@ -82,8 +82,9 @@ src_lists_list_odbc_la_LDFLAGS = -module -avoid-version -no-undefined -static
 src_lists_list_timsieved_scripts_la_LIBADD = ${glib_LIBS}
 src_lists_list_timsieved_scripts_la_LDFLAGS = -module -avoid-version -no-undefined -static
 
-src_modules_mod_arf_microsoft_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
-src_modules_mod_arf_microsoft_la_LDFLAGS = -module -avoid-version -static
+src_modules_mod_arf_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
+src_modules_mod_arf_la_LDFLAGS = -module -avoid-version -static
+src_modules_mod_arf_la_SOURCES = src/modules/mod_arf/microsoft.c
 
 src_modules_mod_block_sender_la_LDFLAGS = -module -avoid-version -static
 

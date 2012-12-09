@@ -70,7 +70,6 @@ echo "
           conditionally built lists:
             list_listserv:           $check_liblistserv
             list_odbc:               $check_libiodbc
-            mod_arf_microsoft        $check_liblistserv
 
           modules built by default:
             mod_block_sender
@@ -82,5 +81,6 @@ echo "
             mod_x_scc_headers
 
           conditionally built modules:
+            mod_arf:                 $check_liblistserv
             mod_sieve:               $check_libsieve
 "

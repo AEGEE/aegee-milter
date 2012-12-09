@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 
+#define _GNU_SOURCE
 #include "prdr-mod.h"
 #include <glib/gstdio.h>
 
@@ -30,7 +30,7 @@ inline void sentmail_not_list_related(char const * const email,
 					     char const * const body_text)
 {
   char *message = g_strconcat("Hello Mail Team,\r\n\r\nthere was a complaint about an email sent to ", email, " via \"", via, "\". However \"", via, "\" is not an AEGEE Mailing list.  Please check the attached message (backup of it is available in the arf@aegee.org mailbox) and try to avoid such complaints in the future.", NULL);
-  mmm (g_strconcat(email, " sent from ", via, NULL), 
+  mmm (g_strconcat(email, " sent from ", via, NULL),
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
 
@@ -39,7 +39,7 @@ inline void email_not_in_list(char const * const email,
 				     char const * const body_text)
 {
   char *message = g_strconcat("Hello Mail Team,\r\n\r\nthe attached email to address ", email, " was sent via the mailing list ", list, ", but the email address is currently not subscribed to ", list, ". Please check what is wrong with the email address/list subscription.  There is a copy of the complaint in the arf@aegee.org mailbox.", NULL);
-  mmm (g_strconcat(email, " not in ", list, NULL), 
+  mmm (g_strconcat(email, " not in ", list, NULL),
        "AEGEE Mail Team <mail@aegee.org>", NULL, rcpt, message, body_text);
 }
 
@@ -98,13 +98,13 @@ inline void remove_email_from_list(char const * const email,
 }
 
 int
-mod_arf_microsoft_LTX_prdr_mod_status (void* priv UNUSED)
+mod_arf_LTX_prdr_mod_status (void* priv UNUSED)
 {
   return MOD_BODY | MOD_RCPT;
 }
 
 int
-mod_arf_microsoft_LTX_prdr_mod_run (void* priv)
+mod_arf_LTX_prdr_mod_run (void* priv)
 {
   if (prdr_get_stage (priv) & (MOD_RCPT | MOD_BODY)
       && (strcmp (prdr_get_recipient(priv), "arf+microsoft@aegee.org") != 0)
@@ -147,7 +147,7 @@ mod_arf_microsoft_LTX_prdr_mod_run (void* priv)
 }
 
 int
-mod_arf_microsoft_LTX_prdr_mod_equal (struct privdata* priv UNUSED, char* user1 UNUSED, char* user2 UNUSED)
+mod_arf_LTX_prdr_mod_equal (struct privdata* priv UNUSED, char* user1 UNUSED, char* user2 UNUSED)
 {
   return 1;
 }
