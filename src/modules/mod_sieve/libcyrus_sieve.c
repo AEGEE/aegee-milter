@@ -14,14 +14,14 @@ static int
 cyrus_autorespond(void *action_context UNUSED, void *interp_context UNUSED,
 		void *script_context UNUSED, void *message_context UNUSED,
 		const char **errmsg UNUSED) {
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
 cyrus_send_responce(void *action_context UNUSED, void *interp_context UNUSED,
 		void *script_context UNUSED, void *message_context UNUSED,
 		const char **errmsg UNUSED) {
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -29,7 +29,7 @@ cyrus_get_size (void *message_context, int *size) {
   struct privdata *cont = (struct privdata*) message_context;
   *size = prdr_get_size (cont);
   if (*size)
-    return 0;
+    return SIEVE_OK;
   else {
     struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
@@ -59,7 +59,7 @@ cyrus_redirect (void *action_context, void *interp_context UNUSED,
   a->cancel_keep = 1;
   a->u.red.addr = g_strdup (((mod_sieve_redirect_context_t*)action_context)->addr);
   a->next = NULL;  
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -77,7 +77,7 @@ cyrus_reject (void *action_context, void *interp_context UNUSED,
   a->cancel_keep = 1;
   a->u.rej.msg = g_strdup (((mod_sieve_reject_context_t*)action_context)->msg);
   a->next = NULL;
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -99,7 +99,7 @@ cyrus_keep (void *action_context UNUSED, void *interp_context UNUSED,
   a->a = ACTION_KEEP;
   a->cancel_keep = 1;
   a->next = NULL;
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -115,7 +115,7 @@ cyrus_discard (void *action_context UNUSED, void *interp_context UNUSED,
   a->a = ACTION_DISCARD;
   a->cancel_keep = 1;
   a->next = NULL;
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -137,7 +137,7 @@ cyrus_get_envelope (void* message_context, const char* field,  const char ***con
   }
   dat->headers[1] = NULL;
   *contents = dat->headers;
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -152,9 +152,14 @@ cyrus_get_header(void *message_context, const char *header,
   }
   const char** ret_headers = prdr_get_header (cont, header);
   if (ret_headers == NULL || ret_headers[0] == NULL) {
-    *contents = NULL;
-    if (ret_headers) g_free (ret_headers);
-    return 0;
+    if (ret_headers) {
+      *contents = ret_headers;
+    } else {
+      *contents = malloc(sizeof(char*));
+      *contents[0] = NULL;
+    }
+    dat->headers = *contents;
+    return SIEVE_OK;
   }
   if (dat->headers)
     g_free (dat->headers);
@@ -166,7 +171,7 @@ cyrus_get_header(void *message_context, const char *header,
   dat->headers[j] = NULL;
   g_free (ret_headers);
   *contents = dat->headers;
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -177,7 +182,7 @@ cyrus_get_include(void *script_context, const char *script,
       (isglobal == 1 ? ":global" : cont->current_recipient->address), script);
   g_snprintf (fpath, size, "%s", bytecode_path);
   free (bytecode_path);
-  return 0;
+  return SIEVE_OK;
 }
 
 static int
@@ -187,7 +192,7 @@ cyrus_execute_error(const char* msg, void *interp_context UNUSED, void *script_c
   sprintf(text, "mode: %u, text: %s", cont->stage, msg);
   prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve:cyrus", text, 0);
   g_free(text);
-  return 0;
+  return SIEVE_OK;
 }
 
 
