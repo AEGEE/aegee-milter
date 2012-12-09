@@ -148,29 +148,17 @@ cyrus_get_header(void *message_context, const char *header,
   if (prdr_get_stage (cont) < MOD_HEADERS) {
     dat->desired_stages |= MOD_HEADERS;
     prdr_do_fail (cont);
-    return -1;
-  }
-  const char** ret_headers = prdr_get_header (cont, header);
-  if (ret_headers == NULL || ret_headers[0] == NULL) {
-    if (ret_headers) {
-      *contents = ret_headers;
-    } else {
-      *contents = malloc(sizeof(char*));
-      *contents[0] = NULL;
-    }
-    dat->headers = *contents;
-    return SIEVE_OK;
+    return SIEVE_FAIL;
   }
   if (dat->headers)
     g_free (dat->headers);
-  int i, j;
-  for (j = 0; ret_headers[j]; j++);
-  dat->headers = g_malloc (sizeof (char *) * (j+1));
-  for (i = 0; i < j; i++)
-    dat->headers[i] = ret_headers[i];
-  dat->headers[j] = NULL;
-  g_free (ret_headers);
-  *contents = dat->headers;
+  dat->headers = prdr_get_header (cont, header);
+  if (dat->headers == NULL) {
+      *contents = malloc(sizeof(char*));
+      *contents[0] = NULL;
+      dat->headers = *contents;
+  } else
+      *contents = dat->headers;
   return SIEVE_OK;
 }
 
