@@ -84,7 +84,7 @@ src_lists_list_timsieved_scripts_la_LDFLAGS = -module -avoid-version -no-undefin
 
 src_modules_mod_arf_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
 src_modules_mod_arf_la_LDFLAGS = -module -avoid-version -static
-src_modules_mod_arf_la_SOURCES = src/modules/mod_arf/microsoft.c
+src_modules_mod_arf_la_SOURCES = src/modules/mod_arf/core.c src/modules/mod_arf/microsoft.c
 
 src_modules_mod_block_sender_la_LDFLAGS = -module -avoid-version -static
 
