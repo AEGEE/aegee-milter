@@ -74,7 +74,7 @@ struct so_module {
 
 struct module {
   struct so_module *so_mod;
-  void *private;
+  void *private_;
   unsigned char flags;
   //see MOD_... flags
   struct message *msg;

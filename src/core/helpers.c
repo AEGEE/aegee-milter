@@ -67,7 +67,7 @@ clear_module_pool (struct privdata* const priv)
   priv->current_recipient = g_malloc (sizeof(struct recipient));
   while (temp) {
     struct module *mod = (struct module*) temp->data;
-    if (mod->so_mod->destroy_rcpt && mod->private)
+    if (mod->so_mod->destroy_rcpt && mod->private_)
       for (i = 0; i < num_so_modules; i++)
 	if (mod->so_mod == so_modules[i]) {
 	  priv->current_recipient->current_module = mod;

@@ -375,16 +375,14 @@ prdr_set_body (struct privdata* const priv, const GString* const body)
 void*
 prdr_get_priv_rcpt (const struct privdata* const priv)
 {
-  //g_printf("===prdr_get_priv_rcpt pointer =%p===\n", priv->current_recipient->current_module->private);
-  return priv->current_recipient->current_module->private;
+  return priv->current_recipient->current_module->private_;
 };
 
 //-----------------------------------------------------------------------------
 void
 prdr_set_priv_rcpt (struct privdata* const priv, void* const user)
 {
-  //g_printf("***prdr_set_priv_rcpt pointer=%p ***\n", user);
-  priv->current_recipient->current_module->private = user;
+  priv->current_recipient->current_module->private_ = user;
 };
 
 //-----------------------------------------------------------------------------
