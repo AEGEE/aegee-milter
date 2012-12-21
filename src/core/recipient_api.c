@@ -83,11 +83,12 @@ prdr_get_recipients (const struct privdata* const priv)
       k = 0;
       while (priv->current_recipient->modules[j]->msg->envrcpts[k++])
 	c++;
-      if (priv->current_recipient->modules[j]->msg->deletemyself == 0 
-	  && i == 0)
-	c++;
-      else i = 1;
     }
+    if (priv->current_recipient->modules[j]->msg->deletemyself == 0
+	&& i == 0)
+      c++;
+    else
+      i = 1;
     if (priv->current_recipient->modules[j]
 	== priv->current_recipient->current_module)
       break;
