@@ -1,7 +1,7 @@
-#include "src/modules/mod_sieve/message.h"
 #include <sieve/sieve_interface.h>
 #include "config.h"
-#include "prdr-mod.h"
+#include "src/modules/mod_sieve/message.h"
+#include "src/prdr-mod.h"
 
 const char const * mod_sieve_script_format;
 

@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include <libmilter/mfapi.h>
 #include <glib/gprintf.h>
-#include "prdr-milter.h"
+#include "src/prdr-milter.h"
 
 extern int bounce_mode;
 extern unsigned int num_so_modules;

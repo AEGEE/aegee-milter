@@ -1,8 +1,8 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <glib/gprintf.h>
-#include "prdr-milter.h"
 #include <glib/gstdio.h>
+#include "src/prdr-milter.h"
 
 int bounce_mode;
 unsigned int num_tables, num_so_lists, num_so_modules;

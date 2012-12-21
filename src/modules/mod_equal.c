@@ -1,4 +1,4 @@
-#include "prdr-mod.h"
+#include "src/prdr-mod.h"
 
 int
 mod_equal_LTX_prdr_mod_status (void* priv UNUSED)

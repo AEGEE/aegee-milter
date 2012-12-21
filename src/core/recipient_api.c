@@ -1,7 +1,7 @@
-#include "prdr-milter.h"
 #include <glib.h>
 #include <glib/gstdio.h>
 #include "config.h"
+#include "src/prdr-milter.h"
 
 extern unsigned int num_so_modules;
 extern struct so_module **so_modules;

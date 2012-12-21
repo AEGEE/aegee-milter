@@ -1,5 +1,5 @@
 #include "src/modules/mod_sieve/message.h"
-#include "prdr-mod.h"
+#include "src/prdr-mod.h"
 
 const char const * mod_sieve_script_format;
 

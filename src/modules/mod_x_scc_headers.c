@@ -1,5 +1,4 @@
-#include "prdr-mod.h"
-
+#include "src/prdr-mod.h"
 
 //these defines facilise dlpreopen later with libtool
 

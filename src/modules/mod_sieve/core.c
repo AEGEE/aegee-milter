@@ -1,10 +1,10 @@
 #include <glib/gstdio.h>
 #define __USE_GNU 1
-#include "prdr-mod.h"
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 
+#include "src/prdr-mod.h"
 #include "src/modules/mod_sieve/message.h"
 #include "config.h"
 

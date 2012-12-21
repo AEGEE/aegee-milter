@@ -1,8 +1,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <liblistserv.h>
-#include <prdr-list.h>
 #include <string.h>
+#include "src/prdr-list.h"
 
 #define LISTSERV_HOME "/home/listserv"
 

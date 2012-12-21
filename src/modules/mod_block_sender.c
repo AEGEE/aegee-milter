@@ -1,5 +1,5 @@
-#include "prdr-mod.h"
 #include <time.h>
+#include "src/prdr-mod.h"
 
 extern GKeyFile* prdr_inifile;
 

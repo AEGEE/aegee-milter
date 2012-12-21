@@ -5,7 +5,7 @@
 #include <string.h>
 #include <glib.h>
 #include <glib/gstdio.h>
-#include "prdr-list.h"
+#include "src/prdr-list.h"
 
 #define UNICODE 1
 extern GKeyFile* prdr_inifile;

@@ -2,7 +2,7 @@
 #include <glib/gstdio.h>
 #include <string.h>
 #include <time.h>
-#include "prdr-list.h"
+#include "src/prdr-list.h"
 extern GKeyFile* prdr_inifile;
 extern char* prdr_section;
 

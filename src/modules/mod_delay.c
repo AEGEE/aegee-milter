@@ -1,6 +1,6 @@
-#include "prdr-mod.h"
 #include <glib/gstdio.h>
 #include <time.h>
+#include "src/prdr-mod.h"
 
 static int delay_ehlo = 0;
 static int delay_mail = 10;
