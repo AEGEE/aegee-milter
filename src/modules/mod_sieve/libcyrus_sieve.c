@@ -34,7 +34,7 @@ cyrus_get_size (void *message_context, int *size) {
     struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
-    return -1;
+    return SIEVE_FAIL;
   }
 }
 
@@ -47,8 +47,7 @@ cyrus_redirect (void *action_context, void *interp_context UNUSED,
   if (prdr_get_stage (cont) != MOD_BODY) {
     prdr_do_fail (cont);
     dat->desired_stages |= MOD_BODY;
-    prdr_do_fail (cont);
-    return SIEVE2_ERROR_FAIL;
+    return SIEVE_FAIL;
   }
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
@@ -89,7 +88,7 @@ cyrus_keep (void *action_context UNUSED, void *interp_context UNUSED,
   if (prdr_get_stage (cont) != MOD_BODY) {
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
-    return -1;
+    return SIEVE_FAIL;
   }
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
   mod_action_list_t *a = dat->last_action->next;
