@@ -8,7 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 G_BEGIN_DECLS
-#include "prdr-list.h"
+#include "src/prdr-list.h"
+
 struct header{
   char *field, *value;
   //bit mask for status
