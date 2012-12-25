@@ -64,14 +64,14 @@ prdr_get_stage (const struct privdata* const priv)
 }
 
 //-----------------------------------------------------------------------------
-char*
+const char*
 prdr_get_recipient (const struct privdata* const priv)
 {
   return priv->current_recipient->address;
 }
 
 //-----------------------------------------------------------------------------
-char**
+const char**
 prdr_get_recipients (const struct privdata* const priv)
 {
   unsigned int j;
@@ -93,7 +93,7 @@ prdr_get_recipients (const struct privdata* const priv)
 	== priv->current_recipient->current_module)
       break;
   }
-  char **ret = g_malloc((c+2-i) * sizeof(char*));
+  const char **ret = (const char**)g_malloc((c+2-i) * sizeof(char*));
   c = 0;
   if (i==0)
     ret[c++] = priv->current_recipient->address;
@@ -314,7 +314,7 @@ prdr_set_envsender (struct privdata* const priv, const char* const env)
 };
 
 //-----------------------------------------------------------------------------
-char*
+const char*
 prdr_get_envsender (const struct privdata* const priv)
 {
   if (priv->stage == MOD_EHLO) return NULL;

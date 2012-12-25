@@ -18,8 +18,8 @@ prdr_mod_run (void* priv)
   if (prdr_get_stage (priv) < MOD_BODY)
     return -1;
   //  g_printf("stage = %i\n", prdr_get_stage(priv));
-  char *mail_from = prdr_get_envsender (priv);
-  char *rcpt_to = prdr_get_recipient (priv);
+  const char *mail_from = prdr_get_envsender (priv);
+  const char *rcpt_to = prdr_get_recipient (priv);
   prdr_list_insert ("log", rcpt_to, "mod_relayed, envelope from:",
 		    mail_from, 0);
   prdr_list_insert ("relayed", rcpt_to /* to */, mail_from /* from */,

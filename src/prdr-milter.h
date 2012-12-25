@@ -21,7 +21,7 @@ struct header{
 };
 
 struct message {
-  char* envfrom;
+  const char* envfrom;
   char deletemyself;
   char** envrcpts;
   //  struct header **headers;
@@ -86,7 +86,7 @@ struct module {
 };
 
 struct recipient {
-  char* address;
+  const char* address;
   guint64 activity;
   struct module** modules;
   struct module* current_module;
@@ -112,8 +112,8 @@ struct recipient {
 void		prdr_set_activity	(struct privdata* priv, const char* const mod_name, gboolean i);
 gboolean	prdr_get_activity	(const struct privdata* priv, const char* const mod_name);
 int		prdr_get_stage		(const struct privdata* priv);
-char*		prdr_get_recipient	(const struct privdata* priv);
-char**		prdr_get_recipients	(const struct privdata* priv);
+const char*	prdr_get_recipient	(const struct privdata* priv);
+const char**	prdr_get_recipients	(const struct privdata* priv);
 void		prdr_add_recipient	(struct privdata* priv, const char* address);
 void		prdr_del_recipient	(struct privdata* priv,
 					 const char* const address);
@@ -131,7 +131,7 @@ void		prdr_del_header		(struct privdata *priv,
 					 const unsigned char index,
 					 const char* const field);//last = 1, at the end, otherwise at the beginning
 void		prdr_set_response	(struct privdata *priv, const char *code /*5xx*/, const char *dsn /*1.2.3*/, const char *reason);
-char*		prdr_get_envsender	(const struct privdata* priv);
+const char*	prdr_get_envsender	(const struct privdata* priv);
 void		prdr_set_envsender	(struct privdata* priv, const char* const env);
 const GString*	prdr_get_body		(struct privdata* priv);
 void		prdr_set_body		(struct privdata* priv, const GString *body);

@@ -11,12 +11,12 @@ mod_equal_LTX_prdr_mod_run (void* priv)
 {
   //  char str[100];
   //  g_sprintf(str, "%d", prdr_get_stage(priv));
-  char *rcpt_to = prdr_get_recipient (priv);
+  const char *rcpt_to = prdr_get_recipient (priv);
   //  prdr_list_insert ("log", rcpt_to, "mod_equal, stage:", str, 0);
   if (prdr_get_stage (priv) < MOD_RCPT)
     return -1;
   //  g_printf("stage = %i\n", prdr_get_stage(priv));
-  char *mail_from = prdr_get_envsender (priv);
+  const char *mail_from = prdr_get_envsender (priv);
   if (prdr_get_stage (priv) == MOD_RCPT) {
   //  g_printf("***%p mod equal %s,%s***\n", priv,  prdr_get_recipient(priv),  prdr_get_envsender(priv));
     if (g_ascii_strcasecmp (rcpt_to, mail_from) == 0 &&
