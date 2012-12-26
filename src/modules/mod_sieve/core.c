@@ -15,7 +15,7 @@ static int mod_sieve_vacation_days_min = 1;
 static int mod_sieve_vacation_days_default = 7;
 static int mod_sieve_vacation_days_max = 30;
 static gboolean mod_sieve_redirect;// = "true";
-extern const char const * mod_sieve_script_format;
+const char *mod_sieve_script_format;
 int libsieve_run (void*);
 int libsieve_load ();
 int libcyrus_sieve_run (void*);

@@ -3,7 +3,7 @@
 #include "src/modules/mod_sieve/message.h"
 #include "src/prdr-mod.h"
 
-const char const * mod_sieve_script_format;
+extern const char *mod_sieve_script_format;
 
 EXPORTED
 void fatal(const char *fatal_message, int fatal_code) {

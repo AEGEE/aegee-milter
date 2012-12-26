@@ -1,7 +1,7 @@
 #include "src/modules/mod_sieve/message.h"
 #include "src/prdr-mod.h"
 
-const char const * mod_sieve_script_format;
+extern const char *mod_sieve_script_format;
 
 static int
 libsieve_keep (UNUSED sieve2_context_t *s, void *my) {
