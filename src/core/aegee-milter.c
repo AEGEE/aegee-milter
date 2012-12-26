@@ -22,7 +22,7 @@ unload_plugins ()
   void (*unload) ();
   if (num_so_modules) {
     for (i = 0; i < num_so_modules; i++) {
-      unload = lt_dlsym (so_modules[i]->mod, "unload");
+      unload = (void(*)())lt_dlsym (so_modules[i]->mod, "unload");
       if (unload) unload ();
       lt_dlclose (so_modules[i]->mod);
       g_free(so_modules[i]);
@@ -36,7 +36,7 @@ unload_plugins ()
   lists = NULL;
   if (num_so_lists) {
     for (i = 0; i < num_so_lists; i++) {
-      unload = lt_dlsym (so_lists[i]->mod, "unload");
+      unload = (void(*)())lt_dlsym (so_lists[i]->mod, "unload");
       if (unload) unload();
       lt_dlclose (so_lists[i]->mod);
       g_free(so_lists[i]);
@@ -74,43 +74,43 @@ load_plugins ()
     //g_printf("LOAD %s\n", lt_preloaded_symbols[j-1].name);
     mod_handle = lt_dlopen (lt_preloaded_symbols[j-1].name);
     int (*load)();
-    load = lt_dlsym (mod_handle, "load");
+    load = (int(*)())lt_dlsym (mod_handle, "load");
     if (load && ( 0 != load ())) {
       g_printf ("Loading %s failed.  Exiting...\n", prdr_section);
       return -1;
     }
     if (lt_preloaded_symbols[j-1].name[0] == 'm') { //load module
-      struct so_module *mod = g_malloc0 (sizeof (struct so_module));
+      struct so_module *mod = (struct so_module*)g_malloc0 (sizeof (struct so_module));
       g_string_append_printf (g_mods, "\n  %s", prdr_section);
       mod->mod = mod_handle;
       mod->name = lt_preloaded_symbols[j-1].name;
       //      g_printf("Loading module \"%s\"...\n", mod->name);
-      mod->run = lt_dlsym (mod->mod, "prdr_mod_run");
+      mod->run = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_run");
       if (mod->run == NULL)
 	g_printf ("Module \"%s\" does not define 'prdr_mod_run'. aegee-milter exits...\n", mod->name);
-      mod->status = lt_dlsym (mod->mod, "prdr_mod_status");
+      mod->status = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_status");
       if (mod->status == NULL)
 	g_printf ("Module \"%s\" does not define 'prdr_mod_status'. aegee-milter exits...\n", mod->name);
-      mod->equal = lt_dlsym (mod->mod, "prdr_mod_equal");
+      mod->equal = (int(*)(struct privdata*, const char*, const char*))lt_dlsym (mod->mod, "prdr_mod_equal");
       if (mod->equal == NULL)
 	g_printf ("Module \"%s\" does not define 'prdr_mod_equal'\n",
 		  mod->name);
-      mod->init_msg = lt_dlsym (mod->mod, "prdr_mod_init_msg");
-      mod->destroy_msg = lt_dlsym (mod->mod, "prdr_mod_destroy_msg");
-      mod->init_rcpt = lt_dlsym (mod->mod, "prdr_mod_init_rcpt");
-      mod->destroy_rcpt = lt_dlsym (mod->mod, "prdr_mod_destroy_rcpt");
-      so_modules = g_realloc (so_modules,
+      mod->init_msg = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_init_msg");
+      mod->destroy_msg = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_destroy_msg");
+      mod->init_rcpt = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_init_rcpt");
+      mod->destroy_rcpt = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_destroy_rcpt");
+      so_modules = (struct so_module**)g_realloc (so_modules,
 			      sizeof(struct so_module*) * ++num_so_modules);
       so_modules[num_so_modules-1] = mod;
     } else { //load list
-      struct so_list *mod = g_malloc0 (sizeof(struct so_list));
+      struct so_list *mod = (struct so_list*)g_malloc0 (sizeof(struct so_list));
       g_string_append_printf (g_lists, "\n  %s (", prdr_section);
       mod->mod = mod_handle;
       //g_printf ("Loading lists module \"%s\"...\n", );
       char ** (*tables) ();
-      tables = lt_dlsym (mod->mod, "prdr_list_tables");
+      tables = (char**(*)())lt_dlsym (mod->mod, "prdr_list_tables");
       if (tables == NULL) {
-        void (*unload) () = lt_dlsym (mod->mod, "unload");
+        void (*unload) () = (void(*)())lt_dlsym (mod->mod, "unload");
         if (unload) unload();
         lt_dlclose (mod->mod);
 	continue;
@@ -123,8 +123,8 @@ load_plugins ()
 	  while (exported_tables[j]) {
 	    g_string_append_printf (g_lists, "%s, ", exported_tables[j]);
 	    //g_printf ("loading table %s\n", exported_tables[j]);
-	    lists = g_realloc (lists, (1+num_tables) * sizeof (struct list*));
-	    lists[num_tables] = g_malloc (sizeof (struct list));
+	    lists = (struct list**)g_realloc (lists, (1+num_tables) * sizeof (struct list*));
+	    lists[num_tables] = (struct list*)g_malloc (sizeof (struct list));
 	    lists[num_tables]->name = exported_tables[j++];
 	    lists[num_tables++]->module = mod;
 	  }
@@ -132,11 +132,11 @@ load_plugins ()
       }
       g_string_truncate (g_lists, g_lists->len - 2);
       g_string_append_printf (g_lists, ") ");
-      mod->query = lt_dlsym (mod->mod, "prdr_list_query");
-      mod->insert = lt_dlsym (mod->mod, "prdr_list_insert");
-      mod->expire = lt_dlsym (mod->mod, "prdr_list_expire");
-      mod->remove = lt_dlsym (mod->mod, "prdr_list_remove");
-      so_lists = g_realloc (so_lists,
+      mod->query = (char*(*)(const char*, const char*, const char*))lt_dlsym (mod->mod, "prdr_list_query");
+      mod->insert = (int(*)(const char*, const char*, const char*, const void*, const unsigned int))lt_dlsym (mod->mod, "prdr_list_insert");
+      mod->expire = (int(*)())lt_dlsym (mod->mod, "prdr_list_expire");
+      mod->remove = (int(*)(const char*, const char*, const char*))lt_dlsym (mod->mod, "prdr_list_remove");
+      so_lists = (struct so_list**)g_realloc (so_lists,
 			    sizeof (struct so_list*) * ++num_so_lists);
       so_lists[num_so_lists-1] = mod;
     }
@@ -309,7 +309,7 @@ main (int argc, char **argv)
     case 'c':
       if (optarg == NULL || *optarg == '\0')
 	g_printf ("-c requires as parameter a configuration file or a directory containing %s\n", CONF_FILE);
-      struct stat *buf = g_malloc (sizeof (struct stat));
+      struct stat *buf = (struct stat*)g_malloc (sizeof (struct stat));
       if (stat (optarg, buf))
 	g_printf ("File %s does not exist.\n", optarg);
       g_free(string);

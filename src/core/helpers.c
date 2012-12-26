@@ -51,7 +51,7 @@ clear_recipients (struct privdata* const priv)
   if (priv->recipients) {
     unsigned int i;
     for (i = 0; i < priv->recipients->len; i++) {
-      clear_recipient ( g_ptr_array_index (priv->recipients, i));
+      clear_recipient ( (struct recipient*)g_ptr_array_index (priv->recipients, i));
     }
     g_ptr_array_free (priv->recipients, TRUE);
     priv->recipients = NULL;
@@ -64,7 +64,7 @@ clear_module_pool (struct privdata* const priv)
   if (priv->module_pool == NULL) return;
   unsigned int i;
   GSList *temp = priv->module_pool;
-  priv->current_recipient = g_malloc (sizeof(struct recipient));
+  priv->current_recipient = (struct recipient*)g_malloc (sizeof(struct recipient));
   while (temp) {
     struct module *mod = (struct module*) temp->data;
     if (mod->so_mod->destroy_rcpt && mod->private_)
@@ -107,20 +107,21 @@ clear_privdata (struct privdata* const priv)
 
 HIDDEN inline int
 inject_response (SMFICTX *ctx,
-		 char* const code,
-		 char* const dsn,
-		 char* const reason)
+		 const char* const code,
+		 const char* const dsn,
+		 const char* const reason)
 {
   //g_printf("***inject_response***\n");
   if  (code == NULL || code[0] == '2'
        || dsn == NULL || reason == NULL) return 0;
   int m =0;
-  while (reason[m] != '\0') {
-    if (reason[m] == '\t' || reason[m] == '%') reason[m] = ' ';
+  char *reason_ = strdup (reason);
+  while (reason_[m] != '\0') {
+    if (reason_[m] == '\t' || reason_[m] == '%') reason_[m] = ' ';
     m++;
     }
   char* p[33];
-  p[0] = strchr (reason, '\n');
+  p[0] = strchr (reason_, '\n');
   if ( p[0] == NULL ) {
     /* struct privdata *priv = (struct privdata *) smfi_getpriv(ctx);
      char *str = g_strconcat (code, ":", dsn, ":", reason, NULL);
@@ -128,7 +129,9 @@ inject_response (SMFICTX *ctx,
 			"inject_response 1: ", str, 0);
 			g_free(str); */
     //g_printf("---inject_response---\n");
-    return smfi_setreply (ctx, code, dsn, reason);
+    int x= smfi_setreply (ctx, code, dsn, reason_);
+    free (reason_);
+    return x;
   }
   m = 0;
   //MAX length per reply line 512 octets
@@ -142,12 +145,14 @@ inject_response (SMFICTX *ctx,
   while ((m >= 0) && (strlen(p[m]) == 0))
 	 p[m--] = NULL;
   //g_printf("---inject_ml_response---\n");
-  return smfi_setmlreply (ctx, code, dsn, reason,
+  int x = smfi_setmlreply (ctx, code, dsn, reason_,
 			  p[ 0], p[ 1], p[ 2], p[ 3], p[ 4], p[ 5], p[ 6], 
                           p[ 7], p[ 8], p[ 9], p[10], p[11], p[12], p[13], 
                           p[14], p[15], p[16], p[17], p[18], p[19], p[20], 
                           p[21], p[22], p[23], p[24], p[25], p[26], p[27], 
                           p[28], p[29], p[30], NULL);
+  free (reason_);
+  return x;
 }
 
 //-----------------------------------------------------------------------------
@@ -202,7 +207,7 @@ set_responses (struct privdata* priv)
   int i = -2, m;
   //check if all recipients agree on the same answer
   for (j = 0; j < priv->recipients->len; j++) {
-    priv->current_recipient = g_ptr_array_index (priv->recipients,j);
+    priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients,j);
     m = 0;
     for (k = 0; k < num_so_modules; k++) {
       priv->current_recipient->current_module =
@@ -231,14 +236,14 @@ set_responses (struct privdata* priv)
   //proceed private modules
   //add private headers
   //add private recipients
-  for (p =0; p < priv->recipients->len; p++) {
-    priv->current_recipient = g_ptr_array_index (priv->recipients, p);
+  for (p = 0; p < priv->recipients->len; p++) {
+    priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, p);
     for (n = 0; n < num_so_modules; n++)
       if (prdr_get_activity (priv, so_modules[n]->name) != 2) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[n];
-	char** recipients = prdr_get_recipients (priv);
-	if (recipients[0] == NULL)
+	const char** recipients = prdr_get_recipients (priv);
+	if (recipients[0] == NULL) {
 	  smfi_delrcpt (priv->ctx, priv->current_recipient->address);
 	else {
 	  if (g_ascii_strcasecmp (recipients[0],
@@ -310,7 +315,7 @@ set_responses (struct privdata* priv)
         case '1': //pseudo_delayed
 	//check what the first recipient thinks
 	  j = 0;
-	  struct recipient *rec = g_ptr_array_index (priv->recipients, 0);
+	  struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
 	  while (j < num_so_modules) {
 	    if (rec->modules[j]->smfi_const != SMFIS_CONTINUE) {
 	      inject_response (priv->ctx, rec->modules[j]->return_code,
@@ -332,7 +337,7 @@ set_responses (struct privdata* priv)
     break;
   default: ;
     //i > 0, every recipient thinks this message must be rejected
-    struct recipient *rec = g_ptr_array_index (priv->recipients, j-1);
+    struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, j-1);
     inject_response (priv->ctx, rec->modules[k]->return_code,
 		     rec->modules[k]->return_dsn,
 		     rec->modules[k]->return_reason);

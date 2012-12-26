@@ -12,7 +12,7 @@ extern struct so_module **so_modules;
 //-----------------------------------------------------------------------------
 static sfsistat
 prdr_connect(SMFICTX *ctx,
-	     char* hostname,
+	     const char* hostname,
 	     struct sockaddr *hostaddr)
 {
   /*  static int invocations = 0;
@@ -22,7 +22,7 @@ prdr_connect(SMFICTX *ctx,
   smfi_stop();*/
   //  printf("***prdr_connect %p***\n", ctx);
   struct privdata *priv;
-  priv = g_malloc0 (sizeof (struct privdata));
+  priv = (struct privdata*)g_malloc0 (sizeof (struct privdata));
   priv->gstr = g_string_chunk_new (4096);
   priv->hostname = g_string_chunk_insert (priv->gstr, hostname);
   priv->domain_name = g_string_chunk_insert (priv->gstr,
@@ -31,11 +31,11 @@ prdr_connect(SMFICTX *ctx,
   if (hostaddr != NULL) {
       switch(hostaddr->sa_family) {
           case AF_INET:
-	      priv->hostaddr = g_malloc (sizeof (struct sockaddr_in));
+              priv->hostaddr = (struct sockaddr*)g_malloc (sizeof (struct sockaddr_in));
               memcpy (priv->hostaddr, hostaddr, sizeof (struct sockaddr_in));
               break;
           case AF_INET6:
-	      priv->hostaddr = g_malloc (sizeof(struct sockaddr_in6));
+              priv->hostaddr = (struct sockaddr*)g_malloc (sizeof(struct sockaddr_in6));
 	      memcpy (priv->hostaddr, hostaddr, sizeof (struct sockaddr_in6));
               break;
       }
@@ -50,7 +50,7 @@ prdr_connect(SMFICTX *ctx,
 //-----------------------------------------------------------------------------
 
 static sfsistat
-prdr_helo (SMFICTX *ctx, char* helohost)
+prdr_helo (SMFICTX *ctx, const char* helohost)
 {
   //printf ("***prdr_helo %p***\n", ctx);
   MILTPRIV
@@ -78,7 +78,7 @@ prdr_envfrom (SMFICTX *ctx, char **argv)
   if (argv[0] == NULL) return SMFIS_TEMPFAIL;
   MILTPRIV
   clear_message (priv->msg);
-  priv->msg = g_malloc0 (sizeof (struct message));
+  priv->msg = (struct message*)g_malloc0 (sizeof (struct message));
   priv->msg->envfrom = normalize_email (priv, argv[0]);
   priv->prdr_supported = 0;
   clear_recipients (priv);
@@ -123,7 +123,7 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
 {
   //  printf ("***prdr_envrcpt %p***\n", ctx);
   MILTPRIV
-  priv->current_recipient = g_malloc0 (sizeof (struct recipient));
+  priv->current_recipient = (struct recipient*)g_malloc0 (sizeof (struct recipient));
   priv->current_recipient->address = normalize_email (priv, argv[0]);
   priv->current_recipient->modules = (struct module**)g_new0 (struct module*,
 							      num_so_modules);
@@ -137,7 +137,7 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     priv->stage = MOD_EHLO;
     priv->size = k;
     for (j = 0; j < (int)priv->recipients->len; j++) {
-      struct recipient *rec = g_ptr_array_index (priv->recipients, j);
+      struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, j);
       if (so_modules[k]->equal (priv, rec->address,
 				priv->current_recipient->address)) {
 	priv->current_recipient->modules[k] = rec->modules[k];
@@ -149,10 +149,9 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     priv->size = temp_size;
     if (j != -1 || priv->recipients->len == 0) {
       //      printf ("===modules are not equal===\n");
-      priv->current_recipient->modules[k] = g_malloc0 (sizeof (struct module));
+      priv->current_recipient->modules[k] = (struct module*)g_malloc0 (sizeof (struct module));
       priv->current_recipient->modules[k]->so_mod = so_modules[k];
-      priv->current_recipient->modules[k]->msg = g_malloc0 (sizeof (struct
-								    message));
+      priv->current_recipient->modules[k]->msg = (struct message*)g_malloc0 (sizeof (struct message));
       priv->current_recipient->current_module =
 	priv->current_recipient->modules[k];
       //      priv->current_recipient->current_module->return_code = g_strdup ("250");
@@ -178,7 +177,7 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     if (bounce_mode < 2 && priv->recipients->len > 0)
       //bounce mode is delayed, or pseudo-delayed, prdr is not supported and another recipient has been accepted so far
       for (k = 0; k < num_so_modules; k++) {
-	struct recipient *rec = g_ptr_array_index (priv->recipients, 0);
+	struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
 	if ((rec->modules[k] != priv->current_recipient->modules[k])
 	    && ((priv->current_recipient->flags & RCPT_NOTIFY_NEVER) == 0) ) {
 	    //if the modules are not equivalent to the modules of the first accepted recipient
@@ -201,8 +200,8 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
 
 static sfsistat
 prdr_header (SMFICTX *ctx,
-	     char* headerf,
-	     char* headerv)
+	     const char* headerf,
+	     const char* headerv)
 {
   //printf("***prdr_header***\n");
   MILTPRIV
@@ -211,14 +210,14 @@ prdr_header (SMFICTX *ctx,
     if (headerf[i++] <= 0 )
       //header field contains non-ascii characters
       {
-	char *t = g_malloc(39 + strlen (headerf));
+	char *t = (char*)g_malloc(39 + strlen (headerf));
 	g_sprintf (t, "Header %s contains non-ascii characters", headerf);
 	inject_response (ctx, "550", NULL, t);
 	g_free (t);
 	return SMFIS_REJECT;
       }
   struct header *h;
-  h = g_malloc (sizeof (struct header));
+  h = (struct header*)g_malloc (sizeof (struct header));
   h->field = g_string_chunk_insert_const (priv->gstr, headerf);
   h->value = g_string_chunk_insert (priv->gstr, headerv);
   g_ptr_array_add (priv->msg->headers, h);
@@ -251,7 +250,7 @@ prdr_eoh (SMFICTX *ctx)
   }
   */
   for (i = 0; i < priv->recipients->len; i++) {
-    priv->current_recipient = g_ptr_array_index (priv->recipients, i);
+    priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, i);
     j = apply_modules (priv);
     if (j == -1) break;//some module for this recipient failed
   }
@@ -264,7 +263,7 @@ prdr_eoh (SMFICTX *ctx)
   }
   if (j == 0) //no module failed, message accepted
     for (i = 0; i < priv->recipients->len; i++) {
-      priv->current_recipient = g_ptr_array_index (priv->recipients, i);
+      priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, i);
       for (k = 0; k < num_so_modules; k++) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[k];
@@ -313,7 +312,7 @@ prdr_eom (SMFICTX *ctx)
     priv->stage = MOD_BODY;
     unsigned int i;
     for (i = 0; i < priv->recipients->len; i++) {
-      priv->current_recipient = g_ptr_array_index (priv->recipients, i);
+      priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, i);
       apply_modules (priv);
     }
     //printf("prdr_eom: %p E\n", ctx);

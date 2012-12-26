@@ -214,7 +214,7 @@ mod_sieve_LTX_prdr_mod_status (void* priv)
 
 //rcpt == NULL || rcpt == "" -> global default script
 static char*
-get_default_script_for_recipient (void* my, char* rcpt)
+get_default_script_for_recipient (void* my, const char* rcpt)
 {
   struct privdata *cont = (struct privdata*) my;
   struct sieve_global *glob = (struct sieve_global*) prdr_get_priv_msg (cont);
@@ -224,7 +224,7 @@ get_default_script_for_recipient (void* my, char* rcpt)
 				      rcpt, NULL, (gpointer*)&temp) ) {
     temp = prdr_list_query (mod_sieve_script_format,
 			    (*rcpt == '\0') ? ":global" : rcpt, "");
-    g_hash_table_insert (glob->recipients, rcpt, temp);
+    g_hash_table_insert (glob->recipients, (gpointer)rcpt, temp);
   }
   /* //for the future
    * if (temp && (strstr (temp, "vacation") != NULL

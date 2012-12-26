@@ -34,7 +34,7 @@ prdr_set_activity (struct privdata* const priv,
 	priv->current_recipient->activity |= j << i*2;
 	unsigned int k;
 	for (k = 0; k < priv->recipients->len; k++) {
-	  struct recipient *rec = g_ptr_array_index (priv->recipients, k);
+	  struct recipient *rec = (struct recipient*) g_ptr_array_index (priv->recipients, k);
           if (rec->modules[i] == priv->current_recipient->modules[i])
 	    rec->activity |= j << i*2;
 	}
@@ -124,7 +124,7 @@ prdr_add_recipient (struct privdata* const priv, const char* const address)
   if (g_ascii_strcasecmp (address, priv->current_recipient->address) == 0) {
     priv->current_recipient->current_module->msg->deletemyself = 0;
   } else if (x == NULL) {
-    x = g_malloc (2 * sizeof (char*));
+    x = (char**)g_malloc (2 * sizeof (char*));
     x[0] = g_string_chunk_insert (priv->gstr, address);
     x[1] = NULL;
     priv->current_recipient->current_module->msg->envrcpts = x;
@@ -186,7 +186,7 @@ prdr_get_header (struct privdata* const priv, const char* const headerfield)
       break;
   }
   i = 0;
-  const char **h = g_malloc (sizeof (char*) * j);
+  const char **h = (const char**)g_malloc (sizeof (char*) * j);
   for (j = 0; j < priv->msg->headers->len; j++) {
     struct header *h1 =
       (struct header*) g_ptr_array_index (priv->msg->headers, j);
@@ -215,12 +215,12 @@ prdr_add_header (struct privdata* const priv,
     unsigned int k;
     for (k = 0;
 	 k < priv->current_recipient->current_module->msg->headers->len; k++) {
-      h = g_ptr_array_index (priv->current_recipient->current_module->msg->headers, k);
+      h = (struct header*)g_ptr_array_index (priv->current_recipient->current_module->msg->headers, k);
       if (strcmp (h->field, field) == 0 && strcmp (h->value, value) == 0)
 	return;
     }
   }
-  h = g_malloc (sizeof (struct header));
+  h = (struct header*)g_malloc (sizeof (struct header));
   h->field = prdr_add_string (priv, field);
   h->value = prdr_add_string (priv, value);
   h->status = index & 0x8F /*0111111b */;
@@ -234,7 +234,7 @@ prdr_del_header (struct privdata* const priv,
 		 const unsigned char index,
 		 const char* const field)
 {//last = 1, at the end, otherwise at the beginning
-  struct header* h = g_malloc (sizeof(struct header));
+  struct header* h = (struct header*)g_malloc (sizeof(struct header));
   h->field = prdr_add_string (priv, field);
   h->status = (index & 0x8F) | 0xA0;
   if (priv->current_recipient->current_module->msg->headers == NULL)
@@ -293,7 +293,7 @@ prdr_get_size (struct privdata* const priv)
   GPtrArray* headers = prdr_get_headers (priv);
   unsigned int j, size = 0;
   for (j = 0; j < headers->len; j++) {
-    struct header * h = g_ptr_array_index (headers, j);
+    struct header * h = (struct header*)g_ptr_array_index (headers, j);
     size += strlen (h->field) + strlen (h->value);
   };
   size += 3*j + 2; // add the ":" header : field - delimiter, and \r\n at the end of each header, and \r\n after the last header
@@ -437,7 +437,7 @@ char* get_date ()
   long gmtoff = -0;
   int gmtneg = 0;
   localtime_r (&_time, &lt);
-  char *date = g_malloc (64);
+  char *date = (char*)g_malloc (64);
   g_sprintf(date, "%s, %02d %s %4d %02d:%02d:%02d %c%.2lu%.2lu",
     	  wday[lt.tm_wday], lt.tm_mday, month[lt.tm_mon],
 	  lt.tm_year + 1900, lt.tm_hour, lt.tm_min, lt.tm_sec,
@@ -458,7 +458,7 @@ prdr_sendmail (const char* const from,
   int i;
   for (i = 0; rcpt[i]; i++)
     length += strlen (rcpt[i]) + 1;
-  char *cmdline = g_malloc (length);
+  char *cmdline = (char*)g_malloc (length);
   cmdline[0] = '\0';
   char *temp = g_stpcpy (cmdline, sendmail);
   temp = g_stpcpy (temp, " -f");//replace with g_strcpy
