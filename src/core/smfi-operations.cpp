@@ -1,3 +1,5 @@
+#include "src/core/intern.hpp"
+
 #define MILTPRIV  struct privdata *priv = (struct privdata *) smfi_getpriv(ctx);
 extern "C" {
 #include <stdlib.h>
@@ -8,8 +10,7 @@ extern "C" {
 }
 
 extern int bounce_mode;
-extern unsigned int num_so_modules;
-extern struct so_module **so_modules;
+extern std::vector<SoModule*> so_modules;
 
 //-----------------------------------------------------------------------------
 static sfsistat
@@ -44,7 +45,7 @@ prdr_connect(SMFICTX *ctx,
   } else
       priv->hostaddr = NULL;
   priv->ctx = ctx;
-  priv->msgpriv = g_new0 (void *, num_so_modules);
+  priv->msgpriv = g_new0 (void *, so_modules.size());
   smfi_setpriv (ctx, priv);
   //printf("---prdr_connect %p---\n", ctx);
   return SMFIS_CONTINUE;
@@ -58,15 +59,15 @@ prdr_helo (SMFICTX *ctx, const char* helohost)
   MILTPRIV
   priv->ehlohost = g_string_chunk_insert (priv->gstr, helohost);
   priv->stage = MOD_EHLO;
-  for (priv->size = 0; priv->size < num_so_modules; priv->size++) {
-    if (so_modules[priv->size]->init_msg) {
-      if (so_modules[priv->size]->destroy_msg && priv->msgpriv[priv->size])
-	so_modules[priv->size]->destroy_msg (priv);
-      so_modules[priv->size]->init_msg (priv);
+  for (priv->size = 0; priv->size < so_modules.size(); priv->size++) {
+    if (priv->msgpriv[priv->size]) {
+      so_modules[priv->size]->DestroyMsg (priv);
+      priv->msgpriv[priv->size] = NULL;
     }
-    if (so_modules[priv->size]->status (priv) & priv->stage)
-      so_modules[priv->size]->run (priv);
-  } 
+    so_modules[priv->size]->InitMsg (priv);
+    if (so_modules[priv->size]->Status (priv) & priv->stage)
+      so_modules[priv->size]->Run (priv);
+  }
   priv->stage = MOD_MAIL;
   //printf("---prdr_helo %p, time=%li---\n", ctx, time(NULL));
   return SMFIS_CONTINUE;
@@ -88,13 +89,12 @@ prdr_envfrom (SMFICTX *ctx, char **argv)
 					  smfi_getsymval (ctx, "i"));
   if (priv->stage != MOD_MAIL) {
     priv->stage = MOD_MAIL;
-    for (priv->size = 0; priv->size < num_so_modules; priv->size++)
-      if (so_modules[priv->size]->init_msg)
-	so_modules[priv->size]->init_msg (priv);
+    for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+	so_modules[priv->size]->InitMsg (priv);
   }
-  for (priv->size = 0; priv->size < num_so_modules; priv->size++)
-    if (so_modules[priv->size]->status (priv) & MOD_MAIL)
-      so_modules[priv->size]->run (priv);
+  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+    if (so_modules[priv->size]->Status (priv) & MOD_MAIL)
+      so_modules[priv->size]->Run (priv);
   priv->mime8bit = 0;
   int i = 1;
   priv->size = 0;
@@ -128,19 +128,19 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
   priv->current_recipient = (struct recipient*)g_malloc0 (sizeof (struct recipient));
   priv->current_recipient->address = normalize_email (priv, argv[0]);
   priv->current_recipient->modules = (struct module**)g_new0 (struct module*,
-							      num_so_modules);
+							  so_modules.size());
   unsigned int k = 1;
   unsigned int temp_size = priv->size;
   while (argv[k])
     if (g_ascii_strcasecmp (argv[k++], "NOTIFY=NEVER") == 0)
       priv->current_recipient->flags |= RCPT_NOTIFY_NEVER;
   int j;
-  for (k = 0; k < num_so_modules; k++) {
+  for (k = 0; k < so_modules.size(); k++) {
     priv->stage = MOD_EHLO;
     priv->size = k;
     for (j = 0; j < (int)priv->recipients->len; j++) {
       struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, j);
-      if (so_modules[k]->equal (priv, rec->address,
+      if (so_modules[k]->Equal (priv, rec->address,
 				priv->current_recipient->address)) {
 	priv->current_recipient->modules[k] = rec->modules[k];
 	j = -1;
@@ -157,12 +157,11 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
       priv->current_recipient->current_module =
 	priv->current_recipient->modules[k];
       //      priv->current_recipient->current_module->return_code = g_strdup ("250");
-      if (so_modules[k]->init_rcpt)
-	so_modules[k]->init_rcpt (priv);
+      so_modules[k]->InitRcpt (priv);
       priv->module_pool = g_slist_prepend (priv->module_pool,
 					   (gpointer)priv->current_recipient->modules[k]);
     }
-  }//for (i = 0; i < num_so_modules; i++)
+  }//for (i = 0; i < so_modules.size(); i++)
   int i = apply_modules (priv);
   if (i > 0) {//some module rejected the message, without prior fails
     inject_response (priv->ctx,
@@ -178,7 +177,7 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     j = SMFIS_CONTINUE;
     if (bounce_mode < 2 && priv->recipients->len > 0)
       //bounce mode is delayed, or pseudo-delayed, prdr is not supported and another recipient has been accepted so far
-      for (k = 0; k < num_so_modules; k++) {
+      for (k = 0; k < so_modules.size(); k++) {
 	struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
 	if ((rec->modules[k] != priv->current_recipient->modules[k])
 	    && ((priv->current_recipient->flags & RCPT_NOTIFY_NEVER) == 0) ) {
@@ -266,12 +265,12 @@ prdr_eoh (SMFICTX *ctx)
   if (j == 0) //no module failed, message accepted
     for (i = 0; i < priv->recipients->len; i++) {
       priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, i);
-      for (k = 0; k < num_so_modules; k++) {
+      for (k = 0; k < so_modules.size(); k++) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[k];
-	if ((so_modules[k]->status (priv) & MOD_BODY) &&
+	if ((so_modules[k]->Status (priv) & MOD_BODY) &&
 	    prdr_get_activity (priv,
-			       priv->current_recipient->current_module->so_mod->name) != 2) {
+			       priv->current_recipient->current_module->so_mod->GetName ()) != 2) {
 	  j =-2;//no module failed but body needed
 	  break;
 	}
@@ -333,9 +332,9 @@ prdr_close (SMFICTX *ctx)
   if (priv == NULL || ctx == NULL) return SMFIS_CONTINUE;
   priv->stage = MOD_EHLO;
   clear_module_pool (priv);
-  for (priv->size = 0; priv->size < num_so_modules; priv->size++)
-    if (so_modules[priv->size]->destroy_msg && priv->msgpriv[priv->size]) {
-      so_modules[priv->size]->destroy_msg (priv);
+  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+    if (priv->msgpriv[priv->size]) {
+      so_modules[priv->size]->DestroyMsg (priv);
     }
   if (priv->hostaddr) {
       g_free (priv->hostaddr);

@@ -1,3 +1,4 @@
+#include "src/core/intern.hpp"
 extern "C" {
 #include <glib/gprintf.h>
 #include "config.h"
@@ -6,10 +7,10 @@ extern "C" {
 }
 
 extern int bounce_mode;
-extern unsigned int num_tables, num_so_lists, num_so_modules;
+extern unsigned int num_tables, num_so_lists;
 extern struct list **lists;
 extern struct so_list **so_lists;
-extern struct so_module **so_modules;
+extern std::vector<SoModule*> so_modules;
 
 HIDDEN void
 clear_ehlo (struct privdata *priv UNUSED)
@@ -61,7 +62,7 @@ clear_recipients (struct privdata* const priv)
 }
 
 HIDDEN void
-clear_module_pool (struct privdata* const priv)
+clear_module_pool (struct privdata* priv)
 {
   if (priv->module_pool == NULL) return;
   unsigned int i;
@@ -69,11 +70,11 @@ clear_module_pool (struct privdata* const priv)
   priv->current_recipient = (struct recipient*)g_malloc (sizeof(struct recipient));
   while (temp) {
     struct module *mod = (struct module*) temp->data;
-    if (mod->so_mod->destroy_rcpt && mod->private_)
-      for (i = 0; i < num_so_modules; i++)
+    if (mod->private_)
+      for (i = 0; i < so_modules.size(); i++)
 	if (mod->so_mod == so_modules[i]) {
 	  priv->current_recipient->current_module = mod;
-	  mod->so_mod->destroy_rcpt (priv);
+	  mod->so_mod->DestroyRcpt (priv);
 	  break;
 	}
     clear_message (mod->msg);
@@ -89,16 +90,16 @@ clear_module_pool (struct privdata* const priv)
 //-----------------------------------------------------------------------------
 
 HIDDEN void
-clear_privdata (struct privdata* const priv)
+clear_privdata (struct privdata* priv)
 {
   //  g_printf ("***clear_privdata %p***\n", priv);
   if (priv == NULL) return;
   clear_message (priv->msg);
   priv->msg = NULL;
   priv->stage = MOD_MAIL;
-  for (priv->size = 0; priv->size < num_so_modules; priv->size++)
-    if (so_modules[priv->size]->destroy_msg && priv->msgpriv[priv->size]) {
-      so_modules[priv->size]->destroy_msg (priv);
+  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+    if (priv->msgpriv[priv->size]) {
+      so_modules[priv->size]->DestroyMsg (priv);
       priv->msgpriv[priv->size] = NULL;
     }
   clear_recipients (priv);
@@ -170,7 +171,7 @@ compact_headers (struct privdata* const priv, unsigned int i)
   struct module* mod;
   //  rec = (struct recipient*) g_ptr_array_index (priv->recipients, 0);
   mod = priv->current_recipient->modules[i];
-  if (prdr_get_activity(priv, mod->so_mod->name) == 2 ||
+  if (prdr_get_activity(priv, mod->so_mod->GetName()) == 2 ||
       mod->msg->headers == NULL) //mod is inactive or does not change headers
     return;
   for ( j = 0; j < priv->recipients->len; j++) {
@@ -211,10 +212,10 @@ set_responses (struct privdata* priv)
   for (j = 0; j < priv->recipients->len; j++) {
     priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients,j);
     m = 0;
-    for (k = 0; k < num_so_modules; k++) {
+    for (k = 0; k < so_modules.size(); k++) {
       priv->current_recipient->current_module =
 	priv->current_recipient->modules[k];
-      if (prdr_get_activity(priv, so_modules[k]->name) != 2
+      if (prdr_get_activity(priv, so_modules[k]->GetName()) != 2
 	  && priv->current_recipient->current_module->smfi_const
 	  != SMFIS_CONTINUE) {
 	m = priv->current_recipient->current_module->smfi_const;
@@ -232,7 +233,7 @@ set_responses (struct privdata* priv)
   //proceed global modules
 
   //add global headers
-  for (n = 0; n < num_so_modules; n++)
+  for (n = 0; n < so_modules.size(); n++)
     compact_headers (priv, n);
   //add global recipients
   //proceed private modules
@@ -240,8 +241,8 @@ set_responses (struct privdata* priv)
   //add private recipients
   for (p = 0; p < priv->recipients->len; p++) {
     priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, p);
-    for (n = 0; n < num_so_modules; n++)
-      if (prdr_get_activity (priv, so_modules[n]->name) != 2) {
+    for (n = 0; n < so_modules.size(); n++)
+      if (prdr_get_activity (priv, so_modules[n]->GetName()) != 2) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[n];
 	const char** recipients = prdr_get_recipients (priv);
@@ -281,9 +282,9 @@ set_responses (struct privdata* priv)
       for (j = 1; j <= priv->recipients->len; j++) {
 	l = SMFIS_CONTINUE;
 	struct recipient *rec = g_ptr_array_index (priv->recipients, j-1);
-	for (k = 0; k < num_so_modules; k++)
+	for (k = 0; k < so_modules.size(); k++)
 	  if (rec->modules[k]->smfi_const != SMFIS_CONTINUE
-	      && prdr_get_activity(priv, so_modules[k]->name) !=2 ) {
+	      && prdr_get_activity(priv, so_modules[k]->GetName()) !=2 ) {
 	    l = rec->modules[k]->smfi_const;
 	    break;
 	}
@@ -318,7 +319,7 @@ set_responses (struct privdata* priv)
 	//check what the first recipient thinks
 	  j = 0;
 	  struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
-	  while (j < num_so_modules) {
+	  while (j < so_modules.size()) {
 	    if (rec->modules[j]->smfi_const != SMFIS_CONTINUE) {
 	      inject_response (priv->ctx, rec->modules[j]->return_code,
 			       rec->modules[j]->return_dsn,
@@ -327,7 +328,7 @@ set_responses (struct privdata* priv)
 	    }
 	    j++;
 	  }
-	  if (j == num_so_modules + 1)
+	  if (j == so_modules.size() + 1)
 	    inject_response (priv->ctx, "250", "2.1.5", "Message accepted");
 	  break;
         case '2': //NDR
@@ -357,21 +358,20 @@ apply_modules (struct privdata* priv)
   //g_printf ("***apply_modules %p***\n", priv);
   if (priv->current_recipient == NULL) return 0;
   //  char remaining_recipients = 1;
-  for (i = 0; i < num_so_modules; i++) {
-    //g_printf ("***apply_modules %p A %i/%i***\n", priv, i, num_so_modules);
+  for (i = 0; i < so_modules.size(); i++) {
     priv->current_recipient->current_module =
       priv->current_recipient->modules[i];
 
-    if (so_modules[i]->status (priv) & priv->stage  //module is subject to execution at this stage 
+    if (so_modules[i]->Status (priv) & priv->stage  //module is subject to execution at this stage
 	//        remaining_recipients && //there are still recipients left
-	&& (2 != prdr_get_activity (priv, so_modules[i]->name)) //and module is active (=not yet disabled)
+	&& (2 != prdr_get_activity (priv, so_modules[i]->GetName())) //and module is active (=not yet disabled)
 	&& (priv->current_recipient->modules[i]->flags & priv->stage) == 0) {
       priv->current_recipient->current_module->flags |= priv->stage;
       priv->current_recipient->current_module->flags &= !MOD_FAILED;
 
       if (priv->stage == MOD_BODY)
 	smfi_progress (priv->ctx);//call this regularly
-      if (so_modules[i]->run (priv)
+      if (so_modules[i]->Run (priv)
 	  || (priv->current_recipient->modules[i]->flags & MOD_FAILED)) { //module was executed with error
 	priv->current_recipient->current_module->return_reason = NULL;
 	priv->current_recipient->current_module->return_code = NULL;
@@ -405,7 +405,7 @@ const char*
 normalize_email (struct privdata* priv, const char *email)
 {
   //remove spaces and <
-  if (strcmp("<>", email) == 0) return "<>";
+  if (strcmp ("<>", email) == 0) return "<>";
   while (*email == ' ' || *email == '<')
     email++;
   //lowercase the characters

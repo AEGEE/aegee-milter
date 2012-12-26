@@ -1,3 +1,4 @@
+#include "src/core/intern.hpp"
 extern "C" {
 #include <sys/stat.h>
 #include <signal.h>
@@ -6,13 +7,13 @@ extern "C" {
 #include "src/prdr-milter.h"
 }
 
+std::vector<SoModule*> so_modules(10);
 int bounce_mode;
-unsigned int num_tables, num_so_lists, num_so_modules;
+unsigned int num_tables, num_so_lists;
 char *prdr_section;
 GKeyFile *prdr_inifile;
 struct list **lists = NULL;
 struct so_list **so_lists;
-struct so_module **so_modules;
 static int alarm_period;
 extern const lt_dlsymlist lt_preloaded_symbols[];
 const char* sendmail;
@@ -22,16 +23,11 @@ unload_plugins ()
 {
   unsigned int i;
   void (*unload) ();
-  if (num_so_modules) {
-    for (i = 0; i < num_so_modules; i++) {
-      unload = (void(*)())lt_dlsym (so_modules[i]->mod, "unload");
-      if (unload) unload ();
-      lt_dlclose (so_modules[i]->mod);
-      g_free(so_modules[i]);
-    }
-    g_free (so_modules);
-  }
-
+  if (!so_modules.empty())
+    for (std::vector<SoModule*>::iterator it = so_modules.begin();
+	 it != so_modules.end(); it++)
+	delete *it;
+  so_modules.clear();
   for (; num_tables; num_tables--)
     g_free (lists[num_tables -1]);
   g_free (lists);
@@ -53,10 +49,8 @@ load_plugins ()
 {
   lt_dlinit();
   int j = 1;
-  num_so_modules = 0;
   num_so_lists = 0;
   so_lists =   NULL; //g_malloc(num_so_lists   * sizeof(struct so_list*));
-  so_modules = NULL; //g_malloc(num_so_modules * sizeof(struct so_module*));
   lt_dlhandle mod_handle;
   j = 1; //int temp;
   GString *g_mods = g_string_new ("Loaded modules:");
@@ -82,28 +76,8 @@ load_plugins ()
       return -1;
     }
     if (lt_preloaded_symbols[j-1].name[0] == 'm') { //load module
-      struct so_module *mod = (struct so_module*)g_malloc0 (sizeof (struct so_module));
+      so_modules.insert(so_modules.end(), new SoModule(lt_preloaded_symbols[j-1].name));
       g_string_append_printf (g_mods, "\n  %s", prdr_section);
-      mod->mod = mod_handle;
-      mod->name = lt_preloaded_symbols[j-1].name;
-      //      g_printf("Loading module \"%s\"...\n", mod->name);
-      mod->run = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_run");
-      if (mod->run == NULL)
-	g_printf ("Module \"%s\" does not define 'prdr_mod_run'. aegee-milter exits...\n", mod->name);
-      mod->status = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_status");
-      if (mod->status == NULL)
-	g_printf ("Module \"%s\" does not define 'prdr_mod_status'. aegee-milter exits...\n", mod->name);
-      mod->equal = (int(*)(struct privdata*, const char*, const char*))lt_dlsym (mod->mod, "prdr_mod_equal");
-      if (mod->equal == NULL)
-	g_printf ("Module \"%s\" does not define 'prdr_mod_equal'\n",
-		  mod->name);
-      mod->init_msg = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_init_msg");
-      mod->destroy_msg = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_destroy_msg");
-      mod->init_rcpt = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_init_rcpt");
-      mod->destroy_rcpt = (int(*)(struct privdata*))lt_dlsym (mod->mod, "prdr_mod_destroy_rcpt");
-      so_modules = (struct so_module**)g_realloc (so_modules,
-			      sizeof(struct so_module*) * ++num_so_modules);
-      so_modules[num_so_modules-1] = mod;
     } else { //load list
       struct so_list *mod = (struct so_list*)g_malloc0 (sizeof(struct so_list));
       g_string_append_printf (g_lists, "\n  %s (", prdr_section);
@@ -148,8 +122,8 @@ load_plugins ()
   g_printf ("%s\n", g_lists->str);
   g_string_free (g_mods, 1);
   g_string_free (g_lists, 1);
-  if (num_so_modules > 31)
-    g_printf ("aegee-milter can operate with up to 31 modules, you are trying to load %i.\n", num_so_modules);
+  if (so_modules.size() > 31)
+    g_printf ("aegee-milter can operate with up to 31 modules, you are trying to load %lu.\n", so_modules.size());
   return 0;
 }
 

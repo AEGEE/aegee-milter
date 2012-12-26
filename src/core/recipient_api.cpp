@@ -1,10 +1,12 @@
+#include "src/core/intern.hpp"
+
+extern "C" {
 #include <glib.h>
 #include <glib/gstdio.h>
 #include "config.h"
 #include "src/prdr-milter.h"
-
-extern unsigned int num_so_modules;
-extern struct so_module **so_modules;
+}
+extern std::vector<SoModule*> so_modules;
 extern const char * const sendmail;
 
 struct sockaddr* prdr_get_hostaddr(struct privdata* priv) {
@@ -49,8 +51,8 @@ prdr_set_activity (struct privdata* const priv,
 {
   unsigned int i;
   if (mod_name) {
-    for (i = 0; i < num_so_modules; i++)
-      if (g_ascii_strcasecmp (so_modules[i]->name, mod_name) == 0) {
+    for (i = 0; i < so_modules.size(); i++)
+      if (g_ascii_strcasecmp (so_modules[i]->GetName (), mod_name) == 0) {
 	priv->current_recipient->activity |= j << i*2;
 	unsigned int k;
 	for (k = 0; k < priv->recipients->len; k++) {
@@ -70,8 +72,8 @@ prdr_get_activity (const struct privdata* const priv,
 {
   unsigned int i;
   if (mod_name)
-    for (i = 0; i < num_so_modules; i++)
-      if (g_ascii_strcasecmp (so_modules[i]->name, mod_name) == 0)
+    for (i = 0; i < so_modules.size(); i++)
+      if (g_ascii_strcasecmp (so_modules[i]->GetName (), mod_name) == 0)
 	return (priv->current_recipient->activity & (3 << (i*2))) >> i*2;
   return -1;
 }
@@ -96,9 +98,9 @@ prdr_get_recipients (const struct privdata* const priv)
 {
   unsigned int j;
   int c = 0, k, i = 0;
-  for (j = 0; j < num_so_modules; j++) {
+  for (j = 0; j < so_modules.size(); j++) {
     if ((priv->current_recipient->modules[j]->msg->envrcpts != NULL)
-        && (prdr_get_activity (priv, so_modules[j]->name) == 0) //module is active
+        && (prdr_get_activity (priv, so_modules[j]->GetName()) == 0) //module is active
         && ((priv->current_recipient->flags & MOD_FAILED) == 0)) {
       k = 0;
       while (priv->current_recipient->modules[j]->msg->envrcpts[k++])
@@ -117,9 +119,9 @@ prdr_get_recipients (const struct privdata* const priv)
   c = 0;
   if (i==0)
     ret[c++] = priv->current_recipient->address;
-  for (j = 0; j < num_so_modules; j++) {
+  for (j = 0; j < so_modules.size(); j++) {
     if ((priv->current_recipient->modules[j]->msg->envrcpts != NULL) &&
-	(prdr_get_activity (priv, so_modules[j]->name) == 0) && //module is active
+	(prdr_get_activity (priv, so_modules[j]->GetName ()) == 0) && //module is active
 	((priv->current_recipient->flags & MOD_FAILED) == 0)) {
       k = 0;
       while (priv->current_recipient->modules[j]->msg->envrcpts[k++] != NULL)
@@ -199,7 +201,7 @@ prdr_get_header (struct privdata* const priv, const char* const headerfield)
   //check headers of global modules to global space
   unsigned int i, j;
   j = priv->msg->headers->len;
-  for (i = 0 ; i < num_so_modules; i++) {
+  for (i = 0 ; i < so_modules.size(); i++) {
     if (priv->current_recipient->modules[i]->msg->headers != NULL) 
       j+= priv->current_recipient->modules[i]->msg->headers->len;
     if ( priv->current_recipient->current_module == priv->current_recipient->modules[i])
@@ -339,7 +341,7 @@ prdr_get_envsender (const struct privdata* const priv)
 {
   if (priv->stage == MOD_EHLO) return NULL;
   unsigned int j;
-  for (j = 0; j < num_so_modules; j++) 
+  for (j = 0; j < so_modules.size(); j++)
     if (priv->current_recipient->current_module
 	== priv->current_recipient->modules[j])
       break;
@@ -347,7 +349,7 @@ prdr_get_envsender (const struct privdata* const priv)
   while (i-- >= 0)
     if ((priv->current_recipient->modules[i+1]->msg->envfrom != NULL) &&
 	(prdr_get_activity (priv,
-			    priv->current_recipient->modules[i+1]->so_mod->name) != 2) // check activity
+			    priv->current_recipient->modules[i+1]->so_mod->GetName ()) != 2) // check activity
 	&& ((priv->current_recipient->modules[i+1]->flags & MOD_FAILED) ==0))
       return priv->current_recipient->modules[i+1]->msg->envfrom;
   return priv->msg->envfrom;
@@ -363,7 +365,7 @@ prdr_get_body (struct privdata* const priv)
   }
   //g_printf("***prdr_get_body***\n");
   unsigned int j;
-  for (j = 0; j < num_so_modules; j++) {
+  for (j = 0; j < so_modules.size(); j++) {
     if (priv->current_recipient->modules[j]
 	== priv->current_recipient->current_module)
       break;
@@ -371,7 +373,7 @@ prdr_get_body (struct privdata* const priv)
   int i = j;
   while (i > 0)
     if ((priv->current_recipient->modules[i--]->msg->body != NULL) &&
-	(prdr_get_activity (priv, so_modules[i+1]->name) != 2) &&
+	(prdr_get_activity (priv, so_modules[i+1]->GetName ()) != 2) &&
 	((priv->current_recipient->modules[i+1]->flags & MOD_FAILED) == 0))
       return priv->current_recipient->modules[i+1]->msg->body;
   return priv->msg->body;
@@ -412,7 +414,7 @@ prdr_get_priv_msg (const struct privdata* const priv)
   if (priv->stage == MOD_MAIL || priv->stage == MOD_EHLO)
     return priv->msgpriv[priv->size];
   unsigned int j;
-  for (j = 0; j < num_so_modules; j++)
+  for (j = 0; j < so_modules.size(); j++)
     if (priv->current_recipient->modules[j] ==
 	priv->current_recipient->current_module) {
       return priv->msgpriv[j];
@@ -428,7 +430,7 @@ prdr_set_priv_msg (struct privdata* const priv, void* const user)
     priv->msgpriv[priv->size] = user;
   else {
     unsigned int j;
-    for (j = 0; j < num_so_modules; j++)
+    for (j = 0; j < so_modules.size(); j++)
       if (priv->current_recipient->modules[j] ==
 	  priv->current_recipient->current_module) {
 	//g_printf ("   %p get_priv_msg %p module %i\n", priv, &( priv->msgpriv[j]), j);
