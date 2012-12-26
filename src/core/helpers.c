@@ -9,13 +9,13 @@ extern struct list **lists;
 extern struct so_list **so_lists;
 extern struct so_module **so_modules;
 
-HIDDEN inline void
+HIDDEN void
 clear_ehlo (struct privdata *priv UNUSED)
 {
 }
 
 //clears all message-oriented data
-HIDDEN inline void
+HIDDEN void
 clear_message (struct message* msg)
 {
   if (msg) {
@@ -36,7 +36,7 @@ clear_message (struct message* msg)
 }
 //-----------------------------------------------------------------------------
 //clears all recipient oriented data
-inline void
+void
 clear_recipient (struct recipient *rec)
 {
   if (rec) {
@@ -45,7 +45,7 @@ clear_recipient (struct recipient *rec)
   }
 }
 
-inline void
+void
 clear_recipients (struct privdata* const priv)
 {
   if (priv->recipients) {
@@ -58,7 +58,7 @@ clear_recipients (struct privdata* const priv)
   }
 }
 
-HIDDEN inline void
+HIDDEN void
 clear_module_pool (struct privdata* const priv)
 {
   if (priv->module_pool == NULL) return;
@@ -86,7 +86,7 @@ clear_module_pool (struct privdata* const priv)
 
 //-----------------------------------------------------------------------------
 
-HIDDEN inline void
+HIDDEN void
 clear_privdata (struct privdata* const priv)
 {
   //  g_printf ("***clear_privdata %p***\n", priv);
@@ -105,7 +105,7 @@ clear_privdata (struct privdata* const priv)
 }
 //-----------------------------------------------------------------------------
 
-HIDDEN inline int
+HIDDEN int
 inject_response (SMFICTX *ctx,
 		 const char* const code,
 		 const char* const dsn,
@@ -199,7 +199,7 @@ compact_headers (struct privdata* const priv, unsigned int i)
 }
 
 //-----------------------------------------------------------------------------
-HIDDEN inline sfsistat
+HIDDEN sfsistat
 set_responses (struct privdata* priv)
 {
   unsigned int j, k = 0, n, p;
@@ -348,7 +348,7 @@ set_responses (struct privdata* priv)
 
 //-----------------------------------------------------------------------------
 //returns -1 failed, 0 - not failed & ACCEPTED, >0 - not failed & REJECTED
-inline int
+int
 apply_modules (struct privdata* priv)
 {
   unsigned int i;
@@ -399,7 +399,7 @@ apply_modules (struct privdata* priv)
 }
 //-----------------------------------------------------------------------------
 
-inline char*
+const char*
 normalize_email (struct privdata* priv, const char *email)
 {
   //remove spaces and <
@@ -417,7 +417,7 @@ normalize_email (struct privdata* priv, const char *email)
 }
 //-----------------------------------------------------------------------------
 
-inline const struct so_list*
+const struct so_list*
 prdr_list_is_available (const char *listname)
 {
   unsigned int i = 0;

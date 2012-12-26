@@ -5,9 +5,9 @@
 
 extern unsigned int num_so_modules;
 extern struct so_module **so_modules;
-extern char* sendmail;
+extern const char * const sendmail;
 
-inline void
+ void
 prdr_do_fail (struct privdata* const priv)
 {
   priv->current_recipient->current_module->flags |= MOD_FAILED;
@@ -419,7 +419,7 @@ prdr_set_priv_msg (struct privdata* const priv, void* const user)
 }
 
 //-----------------------------------------------------------------------------
-inline char*
+char*
 prdr_add_string (struct privdata* const priv, const char* const string)
 {
   return g_string_chunk_insert (priv->gstr, string);

@@ -147,15 +147,15 @@ int		prdr_sendmail(const char* from,
 			      const char* body,
 			      const char* date,
 			      const char* autosubmitted);
-inline char*		prdr_add_string		(struct privdata* const priv, const char* string);
+char*		prdr_add_string		(struct privdata* const priv, const char* string);
 const struct so_list* prdr_list_is_available (const char *listname);
 void clear_ehlo (struct privdata *priv);
 void clear_message (struct message *msg);
 void clear_recipient (struct recipient *rcp);
 void clear_recipients (struct privdata *priv);
-char* normalize_email (struct privdata* priv, const char *email);
+const char* normalize_email (struct privdata* priv, const char *email);
 int apply_modules (struct privdata* priv);
-int inject_response (SMFICTX *ctx, char* const code, char* const dsn, char* const reason);
+int inject_response (SMFICTX *ctx, const char* const code, const char* const dsn, const char* const reason);
 sfsistat set_responses (struct privdata* priv);
 void clear_privdata (struct privdata* const priv);
 void clear_module_pool (struct privdata* const priv);
