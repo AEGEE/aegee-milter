@@ -13,6 +13,7 @@ struct sieve_local {
   sieve2_context_t *sieve2_context;
   mod_action_list_t *actions;
   mod_action_list_t *last_action;
+  int failed;
 };
 
 /* message.h

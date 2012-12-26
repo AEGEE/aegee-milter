@@ -7,7 +7,27 @@ extern unsigned int num_so_modules;
 extern struct so_module **so_modules;
 extern const char * const sendmail;
 
- void
+struct sockaddr* prdr_get_hostaddr(struct privdata* priv) {
+  return priv->hostaddr;
+}
+
+const char* prdr_get_ehlohost(struct privdata* priv) {
+  return priv->ehlohost;
+}
+
+void* prdr_get_ctx(struct privdata* priv) {
+  return priv->ctx;
+}
+
+const char* prdr_get_domain_name(struct privdata* priv) {
+  return priv->domain_name;
+}
+
+const char* prdr_get_queue_id(struct privdata* priv) {
+  return priv->queue_id;
+}
+
+void
 prdr_do_fail (struct privdata* const priv)
 {
   priv->current_recipient->current_module->flags |= MOD_FAILED;

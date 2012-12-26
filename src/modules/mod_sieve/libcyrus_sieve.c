@@ -1,4 +1,5 @@
 #include <sieve/sieve_interface.h>
+#include <stdlib.h>
 #include "config.h"
 #include "src/modules/mod_sieve/message.h"
 #include "src/prdr-mod.h"
@@ -33,6 +34,7 @@ cyrus_get_size (void *message_context, int *size) {
   else {
     struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
+    dat->failed = 1;
     prdr_do_fail (cont);
     return SIEVE_FAIL;
   }
@@ -46,6 +48,7 @@ cyrus_redirect (void *action_context, void *interp_context UNUSED,
   struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
   if (prdr_get_stage (cont) != MOD_BODY) {
     prdr_do_fail (cont);
+    dat->failed = 1;
     dat->desired_stages |= MOD_BODY;
     return SIEVE_FAIL;
   }
@@ -88,6 +91,7 @@ cyrus_keep (void *action_context UNUSED, void *interp_context UNUSED,
   if (prdr_get_stage (cont) != MOD_BODY) {
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE_FAIL;
   }
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
@@ -147,6 +151,7 @@ cyrus_get_header(void *message_context, const char *header,
   if (prdr_get_stage (cont) < MOD_HEADERS) {
     dat->desired_stages |= MOD_HEADERS;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE_FAIL;
   }
   if (dat->headers)
@@ -166,7 +171,7 @@ cyrus_get_include(void *script_context, const char *script,
 		  int isglobal, char *fpath, size_t size) {
   struct privdata *cont = (struct privdata*) script_context;
   char *bytecode_path = prdr_list_query (mod_sieve_script_format,
-      (isglobal == 1 ? ":global" : cont->current_recipient->address), script);
+					 (isglobal == 1 ? ":global" : prdr_get_recipient(cont)), script);
   g_snprintf (fpath, size, "%s", bytecode_path);
   free (bytecode_path);
   return SIEVE_OK;
@@ -176,7 +181,7 @@ static int
 cyrus_execute_error(const char* msg, void *interp_context UNUSED, void *script_context, void *message_context UNUSED) {
   struct privdata *cont = (struct privdata*) script_context;
   char *text = g_malloc (strlen(msg)+17);
-  sprintf(text, "mode: %u, text: %s", cont->stage, msg);
+  sprintf(text, "mode: %u, text: %s", prdr_get_stage(cont), msg);
   prdr_list_insert ("log", prdr_get_recipient (cont), "mod_sieve:cyrus", text, 0);
   g_free(text);
   return SIEVE_OK;

@@ -1,5 +1,6 @@
 #include <glib/gstdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include "src/prdr-mod.h"
 
 static int delay_ehlo = 0;

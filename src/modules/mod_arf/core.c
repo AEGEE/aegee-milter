@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include <glib/gstdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "src/prdr-mod.h"
 
 extern char* ms_get_original_recipient(const char *);

@@ -73,10 +73,10 @@ substitute_named_variable (struct privdata *cont,
   if (strstr(variable, "headers.") == variable) {
       const char **headers;
       if (prdr_get_stage (cont) < MOD_HEADERS ) {
-          prdr_do_fail (cont);
 	  struct sieve_local *dat =
 	    (struct sieve_local*)prdr_get_priv_rcpt (cont);
 	  dat->desired_stages |= MOD_HEADERS;
+	  dat->failed = 1;
 	  prdr_do_fail (cont);
 	  return g_strdup ("defect");
       }
@@ -245,7 +245,7 @@ sieve_getscript (char const *const path, char const * const name, void *my)
   if ( path == NULL || *path == '\0' || strcmp (path, ":global")) {//the scope is private
     if ( name == NULL || *name == '\0' ) {
       //default script for recipient
-      char *def = get_default_script_for_recipient (my, cont->current_recipient->address);
+      char *def = get_default_script_for_recipient (my, prdr_get_recipient(cont));
       return def == NULL ?
 	/* load the global default script */ get_default_script_for_recipient (my, "") : def;
     }
@@ -286,6 +286,7 @@ mod_sieve_LTX_prdr_mod_init_rcpt (void* private)
 {
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local *dat = g_malloc0 (sizeof (struct sieve_local));
+  dat->failed = 0;
   dat->desired_stages = MOD_RCPT;
   dat->hashTable   = g_hash_table_new_full (g_str_hash, g_str_equal,
 					    NULL, g_free);
@@ -328,6 +329,7 @@ sieve_fileinto (sieve2_context_t *s, void *my)
   if (prdr_get_stage(cont) != MOD_BODY) {
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail(cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   };
   char *fileinto = g_strconcat(prdr_get_recipient(cont), "+", sieve2_getvalue_string(s, "mailbox"), NULL);
@@ -345,18 +347,19 @@ sieve_redirect (mod_sieve_redirect_context_t context, void *my)
   struct privdata *cont = (struct privdata*) my;
   GString *body = g_string_new ("Received: from ");
   char IP[256];
-  switch (cont->hostaddr->sa_family) {
+  switch (prdr_get_hostaddr(cont)->sa_family) {
       case AF_INET:
-	inet_ntop (AF_INET, &((struct sockaddr_in*)(cont->hostaddr))->sin_addr, IP, 256);
+	inet_ntop  (AF_INET, &((struct sockaddr_in*) (prdr_get_hostaddr (cont)))->sin_addr, IP, 256);
 	break;
       case AF_INET6:
-	inet_ntop (AF_INET6, &((struct sockaddr_in6*)(cont->hostaddr))->sin6_addr, IP, 256);
+	inet_ntop (AF_INET6, &((struct sockaddr_in6*)(prdr_get_hostaddr (cont)))->sin6_addr, IP, 256);
 	break;
   }
   char* date = get_date ();
   g_string_append_printf (body, "%s [%s]\r\n        by %s id %s;\r\n        %s",
-			  cont->ehlohost, IP, cont->domain_name,
-			  cont->queue_id, date);
+			  prdr_get_ehlohost (cont), IP,
+			  prdr_get_domain_name(cont),
+			  prdr_get_queue_id(cont), date);
   g_free (date);
   g_string_append_printf (body, "\r\nResent-From: %s\r\nResent-To: ",
 			  prdr_get_envsender (cont));
@@ -402,14 +405,15 @@ static int
 sieve_reject (struct mod_sieve_reject_context context, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
-  if (cont->current_recipient->current_module->flags & MOD_FAILED)
+  struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
+  if (dat->failed)
     return SIEVE2_ERROR_FAIL;
   char *return_text = expand_variables_in_string(cont, context.msg);
   prdr_set_response (cont, "550", "5.7.1", return_text);
   prdr_del_recipient (cont, prdr_get_recipient (cont));
   char *text = g_strconcat ("from " , prdr_get_envsender (cont),
 			    ", mod_sieve, action reject:", NULL);
-  if ( (cont->current_recipient->current_module->flags & MOD_FAILED) == 0)
+  if (dat->failed == 0)
     prdr_list_insert ("log", prdr_get_recipient (cont), text, return_text, 0);
   g_free (text);
   g_free (return_text);

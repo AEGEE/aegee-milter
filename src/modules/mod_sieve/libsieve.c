@@ -10,6 +10,7 @@ libsieve_keep (UNUSED sieve2_context_t *s, void *my) {
   if (prdr_get_stage (cont) != MOD_BODY) {
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   }
   dat->last_action->next = (mod_action_list_t *) g_malloc(sizeof(mod_action_list_t));
@@ -59,8 +60,8 @@ libsieve_redirect (sieve2_context_t *s, void *my) {
   struct privdata *cont = (struct privdata*) my;
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
   if (prdr_get_stage (cont) != MOD_BODY) {
-    prdr_do_fail (cont);
     dat->desired_stages |= MOD_BODY;
+    dat->failed = 1;
     prdr_do_fail (cont);
     return SIEVE2_ERROR_FAIL;
   }
@@ -103,6 +104,7 @@ libsieve_vacation (sieve2_context_t *s, void *my)
     struct sieve_local *dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   }
   struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
@@ -134,6 +136,7 @@ libsieve_getbody (sieve2_context_t *s, void *my)
     struct sieve_local *dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   }
   const GString *body = prdr_get_body (cont);
@@ -153,6 +156,7 @@ libsieve_getsize (sieve2_context_t *s, void *my)
     struct sieve_local* dat = (struct sieve_local*)prdr_get_priv_rcpt (cont);
     dat->desired_stages |= MOD_BODY;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   }
 }
@@ -176,6 +180,7 @@ libsieve_getheader (sieve2_context_t *s, void *my)
   if (prdr_get_stage (cont) < MOD_HEADERS) {
     dat->desired_stages |= MOD_HEADERS;
     prdr_do_fail (cont);
+    dat->failed = 1;
     return SIEVE2_ERROR_FAIL;
   }
   char const * const header = sieve2_getvalue_string (s, "header");

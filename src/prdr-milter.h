@@ -118,6 +118,7 @@ void		prdr_add_recipient	(struct privdata* priv, const char* address);
 void		prdr_del_recipient	(struct privdata* priv,
 					 const char* const address);
 int		prdr_get_size		(struct privdata* priv);
+struct sockaddr* prdr_get_hostaddr	(struct privdata* priv);
 void		prdr_do_fail		(struct privdata* priv);
 int 		prdr_has_failed		(struct privdata* priv);
 const char**	prdr_get_header		(struct privdata* priv,
@@ -148,6 +149,10 @@ int		prdr_sendmail(const char* from,
 			      const char* date,
 			      const char* autosubmitted);
 char*		prdr_add_string		(struct privdata* const priv, const char* string);
+void* prdr_get_ctx(struct privdata* priv);
+const char* prdr_get_ehlohost(struct privdata* priv);
+const char* prdr_get_domain_name(struct privdata* priv);
+const char* prdr_get_queue_id(struct privdata* priv);
 const struct so_list* prdr_list_is_available (const char *listname);
 void clear_ehlo (struct privdata *priv);
 void clear_message (struct message *msg);
