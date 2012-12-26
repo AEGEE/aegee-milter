@@ -1,7 +1,9 @@
+extern "C" {
 #include <glib/gprintf.h>
 #include "config.h"
 #include "src/prdr-list.h"
 #include "src/prdr-milter.h"
+}
 
 extern int bounce_mode;
 extern unsigned int num_tables, num_so_lists, num_so_modules;

@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = src/core/prdr-list.h contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS =
 AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS}
+AM_CXXFLAGS = ${AM_CFLAGS}
 
 pkglib_LTLIBRARIES = 
 noinst_LTLIBRARIES=
@@ -24,7 +25,7 @@ libtool: $(LIBTOOL_DEPS)
 
 sbin_PROGRAMS = aegee-milter
 
-aegee_milter_SOURCES = src/prdr-milter.h src/prdr-list.h src/core/aegee-milter.c src/core/helpers.c src/core/recipient_api.c src/core/smfi-operations.c
+aegee_milter_SOURCES = src/prdr-milter.h src/prdr-list.h src/core/aegee-milter.cpp src/core/helpers.cpp src/core/recipient_api.cpp src/core/smfi-operations.cpp
 #src_prdr_milter_DEPENDENCIES = src/LD_DYNAMIC_LIST
 aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL)
 #-Wl,--dynamic-list=LD_DYNAMIC_LIST

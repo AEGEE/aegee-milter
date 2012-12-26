@@ -1,8 +1,10 @@
+extern "C" {
 #include <sys/stat.h>
 #include <signal.h>
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
 #include "src/prdr-milter.h"
+}
 
 int bounce_mode;
 unsigned int num_tables, num_so_lists, num_so_modules;
@@ -286,6 +288,8 @@ proceed_conf_file (const char* filename)
   return 0;
 }
 
+extern "C" struct smfiDesc smfilter;
+
 int
 main (int argc, char **argv)
 {
@@ -321,7 +325,6 @@ main (int argc, char **argv)
       }
       g_free (buf);
     }
-  extern struct smfiDesc smfilter;
   if (smfi_register (smfilter) == MI_FAILURE)
     g_printf ("smfi_register failed, most probably not enough memory\n");
   lt_dlpreload_default (lt_preloaded_symbols);

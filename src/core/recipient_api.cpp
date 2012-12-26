@@ -334,7 +334,7 @@ prdr_get_envsender (const struct privdata* const priv)
 }
 
 //-----------------------------------------------------------------------------
-const GString*
+extern "C" const GString*
 prdr_get_body (struct privdata* const priv)
 {
   if (priv->stage != MOD_BODY) {
@@ -359,7 +359,7 @@ prdr_get_body (struct privdata* const priv)
 };
 
 //-----------------------------------------------------------------------------
-void
+extern "C" void
 prdr_set_body (struct privdata* const priv, const GString* const body)
 {
   //g_printf("***prdr_set_body***\n");
@@ -372,21 +372,21 @@ prdr_set_body (struct privdata* const priv, const GString* const body)
 };
 
 //-----------------------------------------------------------------------------
-void*
+extern "C" void*
 prdr_get_priv_rcpt (const struct privdata* const priv)
 {
   return priv->current_recipient->current_module->private_;
 };
 
 //-----------------------------------------------------------------------------
-void
+extern "C" void
 prdr_set_priv_rcpt (struct privdata* const priv, void* const user)
 {
   priv->current_recipient->current_module->private_ = user;
 };
 
 //-----------------------------------------------------------------------------
-void*
+extern "C" void*
 prdr_get_priv_msg (const struct privdata* const priv)
 {
   if (priv->stage == MOD_MAIL || priv->stage == MOD_EHLO)
