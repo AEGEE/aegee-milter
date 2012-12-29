@@ -1,6 +1,5 @@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 AM_LDFLAGS= ${CFLAG_VISIBILITY}
-ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = src/core/prdr-list.h contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS =
 AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS}

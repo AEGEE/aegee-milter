@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2 subdir-objects silent-rules])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/core/aegee-milter.cpp])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIRS([m4])
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
