@@ -1,7 +1,6 @@
 #ifndef SoModule_hpp
 #define SoModule_hpp
 
-#include <string>
 extern "C" {
   #include <ltdl.h>
   #include "src/prdr-milter.h"
@@ -21,7 +20,7 @@ public:
   ~SoModule();
 private:
   lt_dlhandle mod;
-  std::string name;
+  const char * const name;
   int (*run) (struct privdata*);
   int (*status) (struct privdata*);
   int (*init_msg) (struct privdata*);

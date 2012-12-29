@@ -6,18 +6,15 @@ extern "C" {
   extern const lt_dlsymlist lt_preloaded_symbols[];
 }
 
-SoModule::SoModule(const char* const &name) {
-  this->name = name;
+SoModule::SoModule(const char* const &name) : name(name) {
   if (name[0] != 'm')
     throw -2;
+  mod = lt_dlopen (name);
 
-  this->mod = lt_dlopen (name);
-  int (*load)() = (int (*)()) lt_dlsym (this->mod, "load");
-  if (load && (0 != load ())) {
-    lt_dlclose (this->mod);
-    std::cout << "Loading " << name << "failed. Exiting..." << std::endl;
-    throw -1;
-  }
+  int (*load)() = (int(*)())lt_dlsym (mod, "load");
+  if (load && ( 0 != load ()))
+    throw -4;
+
   run = (int(*)(struct privdata*))lt_dlsym(mod, "prdr_mod_run");
   if (run == NULL) {
     std::cout << "Module \"" << name << "\" does not define 'prdr_mod_run'. aegee-milter exits..." << std::endl;
@@ -69,11 +66,10 @@ int SoModule::DestroyRcpt (struct privdata* &x) {
 int SoModule::Equal (struct privdata* &x, const char* &a, const char* &b) {
   return equal(x, a, b);
 }
-const char* SoModule::GetName () { return name.c_str(); }
+const char * SoModule::GetName () { return name; }
 
 SoModule::~SoModule () {
-  void (*unload)();
-  unload = (void(*)())lt_dlsym(mod, "unload");
+  void (*unload)() = (void(*)())lt_dlsym(mod, "unload");
   if (unload) unload ();
   lt_dlclose (mod);
 }
