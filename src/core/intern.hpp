@@ -1,10 +1,9 @@
 extern "C" {
 #include <libmilter/mfapi.h>
-#include <ltdl.h>
 }
 
+#include "src/objects/SoList.hpp"
 #include "src/objects/SoModule.hpp"
-#include <vector>
 
 struct message {
   const char* envfrom;
@@ -13,19 +12,6 @@ struct message {
   //  struct header **headers;
   GPtrArray* headers;
   GString* body;
-};
-
-struct so_list {
-  lt_dlhandle mod;
-  int   (*expire) ();
-  char* (*query) (const char*, const char *, const char*);
-  int   (*remove) (const char*, const char*, const char*);
-  int   (*insert) (const char*, const char*, const char*, const void*, const unsigned int);
-};
-
-struct list {
-  struct so_list *module;
-  char *name;
 };
 
 struct privdata
@@ -80,3 +66,4 @@ int inject_response (SMFICTX *ctx, const char* const code, const char* const dsn
 sfsistat set_responses (struct privdata* priv);
 void clear_privdata (struct privdata* priv);
 void clear_module_pool (struct privdata* priv);
+const SoList* prdr_list_is_available (const char *listname);

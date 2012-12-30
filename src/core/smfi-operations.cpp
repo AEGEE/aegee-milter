@@ -8,7 +8,7 @@ extern "C" {
 #include <glib/gprintf.h>
 #include "src/prdr-milter.h"
 }
-
+#include <vector>
 extern int bounce_mode;
 extern std::vector<SoModule*> so_modules;
 

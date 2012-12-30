@@ -6,14 +6,15 @@ extern "C" {
 #include <glib/gstdio.h>
 #include "src/prdr-milter.h"
 }
-
+#include <map>
+#include <vector>
 std::vector<SoModule*> so_modules(10);
+std::vector<SoList*> so_lists(10);
+std::map<std::string, SoList*> tables;
 int bounce_mode;
-unsigned int num_tables, num_so_lists;
 char *prdr_section;
 GKeyFile *prdr_inifile;
 struct list **lists = NULL;
-struct so_list **so_lists;
 static int alarm_period;
 extern const lt_dlsymlist lt_preloaded_symbols[];
 const char* sendmail;
@@ -21,26 +22,20 @@ const char* sendmail;
 static void
 unload_plugins ()
 {
-  unsigned int i;
-  void (*unload) ();
-  if (!so_modules.empty())
-    for (std::vector<SoModule*>::iterator it = so_modules.begin();
-	 it != so_modules.end(); it++)
+  if (!so_modules.empty ())
+    for (std::vector<SoModule*>::iterator it = so_modules.begin ();
+	it != so_modules.end (); it++)
 	delete *it;
-  so_modules.clear();
-  for (; num_tables; num_tables--)
-    g_free (lists[num_tables -1]);
-  g_free (lists);
-  lists = NULL;
-  if (num_so_lists) {
-    for (i = 0; i < num_so_lists; i++) {
-      unload = (void(*)())lt_dlsym (so_lists[i]->mod, "unload");
-      if (unload) unload();
-      lt_dlclose (so_lists[i]->mod);
-      g_free(so_lists[i]);
-    }
-    g_free (so_lists);
-  }
+  so_modules.clear ();
+
+  if (!so_lists.empty ())
+    for (std::vector<SoList*>::iterator it = so_lists.begin ();
+	it != so_lists.end (); it++)
+	delete *it;
+  so_lists.clear ();
+
+  tables.clear ();
+
   lt_dlexit ();
 }
 
@@ -49,10 +44,6 @@ load_plugins ()
 {
   lt_dlinit();
   int j = 1;
-  num_so_lists = 0;
-  so_lists =   NULL; //g_malloc(num_so_lists   * sizeof(struct so_list*));
-  lt_dlhandle mod_handle;
-  j = 1; //int temp;
   GString *g_mods = g_string_new ("Loaded modules:");
   GString *g_lists = g_string_new ("Loaded lists (with tables):");
   while (lt_preloaded_symbols[j].name != NULL) {
@@ -68,53 +59,29 @@ load_plugins ()
       continue;
     } else g_strfreev (array);
     //g_printf("LOAD %s\n", lt_preloaded_symbols[j-1].name);
-    mod_handle = lt_dlopen (lt_preloaded_symbols[j-1].name);
-    int (*load)();
-    load = (int(*)())lt_dlsym (mod_handle, "load");
-    if (load && ( 0 != load ())) {
-      g_printf ("Loading %s failed.  Exiting...\n", prdr_section);
-      return -1;
-    }
     if (lt_preloaded_symbols[j-1].name[0] == 'm') { //load module
       so_modules.insert(so_modules.end(), new SoModule(lt_preloaded_symbols[j-1].name));
       g_string_append_printf (g_mods, "\n  %s", prdr_section);
     } else { //load list
-      struct so_list *mod = (struct so_list*)g_malloc0 (sizeof(struct so_list));
+      SoList* soList = new SoList(lt_preloaded_symbols[j-1].name);
+      char **so_tables = soList->Tables();
       g_string_append_printf (g_lists, "\n  %s (", prdr_section);
-      mod->mod = mod_handle;
-      //g_printf ("Loading lists module \"%s\"...\n", );
-      char ** (*tables) ();
-      tables = (char**(*)())lt_dlsym (mod->mod, "prdr_list_tables");
-      if (tables == NULL) {
-        void (*unload) () = (void(*)())lt_dlsym (mod->mod, "unload");
-        if (unload) unload();
-        lt_dlclose (mod->mod);
+      if (so_tables == NULL) {
+        delete soList;
 	continue;
 	//g_printf ("The list backend \"%s\", does not export prdr_list_tables. The module is useless. aegee-milter exits...\n", lt_preloaded_symbols[j-1].name, filename);
       } else {
+        so_lists.insert(so_lists.end(), soList);
 	 //load tables
-	char **exported_tables = tables ();
-	if (exported_tables) {
-	  int j = 0;
-	  while (exported_tables[j]) {
-	    g_string_append_printf (g_lists, "%s, ", exported_tables[j]);
-	    //g_printf ("loading table %s\n", exported_tables[j]);
-	    lists = (struct list**)g_realloc (lists, (1+num_tables) * sizeof (struct list*));
-	    lists[num_tables] = (struct list*)g_malloc (sizeof (struct list));
-	    lists[num_tables]->name = exported_tables[j++];
-	    lists[num_tables++]->module = mod;
-	  }
+        int j = 0;
+	while (so_tables[j]) {
+	  g_string_append_printf (g_lists, "%s, ", so_tables[j]);
+	  //g_printf ("loading table %s\n", exported_tables[j]);
+	  tables[so_tables[j++]] = soList;
 	}
       }
       g_string_truncate (g_lists, g_lists->len - 2);
       g_string_append_printf (g_lists, ") ");
-      mod->query = (char*(*)(const char*, const char*, const char*))lt_dlsym (mod->mod, "prdr_list_query");
-      mod->insert = (int(*)(const char*, const char*, const char*, const void*, const unsigned int))lt_dlsym (mod->mod, "prdr_list_insert");
-      mod->expire = (int(*)())lt_dlsym (mod->mod, "prdr_list_expire");
-      mod->remove = (int(*)(const char*, const char*, const char*))lt_dlsym (mod->mod, "prdr_list_remove");
-      so_lists = (struct so_list**)g_realloc (so_lists,
-			    sizeof (struct so_list*) * ++num_so_lists);
-      so_lists[num_so_lists-1] = mod;
     }
     g_free (prdr_section);
   }

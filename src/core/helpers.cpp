@@ -7,10 +7,9 @@ extern "C" {
 }
 
 extern int bounce_mode;
-extern unsigned int num_tables, num_so_lists;
-extern struct list **lists;
-extern struct so_list **so_lists;
 extern std::vector<SoModule*> so_modules;
+extern std::vector<SoList*> so_lists;
+extern std::map<std::string, SoList*> tables;
 
 HIDDEN void
 clear_ehlo (struct privdata *priv UNUSED)
@@ -419,15 +418,11 @@ normalize_email (struct privdata* priv, const char *email)
 }
 //-----------------------------------------------------------------------------
 
-const struct so_list*
+const struct SoList*
 prdr_list_is_available (const char *listname)
 {
-  unsigned int i = 0;
-  if (listname)
-    while (i < num_tables)
-      if (lists[i]->name && g_ascii_strcasecmp (lists[i++]->name, listname) == 0)
-	return lists[i-1]->module;
-  return NULL;
+  std::map<std::string, SoList*>::iterator it = tables.find (std::string (listname));
+  return (it == tables.end ()) ? NULL : it->second;
 }
 
 //-----------------------------------------------------------------------------
@@ -439,40 +434,28 @@ prdr_list_insert (const char *table,
 		  const char *value,
 		  const unsigned int expire)
 {
-  const struct so_list *ml = prdr_list_is_available (table);
-  if (ml && ml->insert)
-    return  ml->insert (table, user, key, value, expire);
-  else
-    return -1;
+  return tables[table]->Insert (table, user, key, value, expire);
 }
 //-----------------------------------------------------------------------------
 
 char*
 prdr_list_query (const char *table, const char *user, const char *key)
 {
-  //g_printf("***prdr_list_query***, table=%s, user=%s, key=%s\n", table, user, key);
-  const struct so_list *ml = prdr_list_is_available (table);
-  //g_printf("---prdr_list_query---%p\n", ml);
-  return ml->query (table, user, key);
+  return tables[table]->Query (table, user, key);
 }
 //-----------------------------------------------------------------------------
 
 void
 prdr_list_expire ()
 {
-  unsigned int i;
-  for (i = 0; i < num_so_lists; i++)
-    if(so_lists[i]->expire)
-      so_lists[i]->expire ();
+  for (std::vector<SoList*>::iterator it = so_lists.begin ();
+       it != so_lists.end (); it++)
+    (*it)->Expire ();
 }
 //-----------------------------------------------------------------------------
 
 int
 prdr_list_remove (const char *table, const char *user, const char *key)
 {
-  const struct so_list *ml = prdr_list_is_available (table);
-  if (ml &&  ml->remove)
-    return ml->remove (table, user, key);
-  else
-    return -1;
+  return tables[table]->Remove (table, user, key);
 }

@@ -6,6 +6,7 @@ extern "C" {
 #include "config.h"
 #include "src/prdr-milter.h"
 }
+#include <vector>
 extern std::vector<SoModule*> so_modules;
 extern const char * const sendmail;
 
