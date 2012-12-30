@@ -66,3 +66,4 @@ int inject_response (SMFICTX *ctx, const char* const code, const char* const dsn
 sfsistat set_responses (struct privdata* priv);
 void clear_privdata (struct privdata* priv);
 void clear_module_pool (struct privdata* priv);
+char* prdr_add_string (struct privdata* const priv, const char* string);

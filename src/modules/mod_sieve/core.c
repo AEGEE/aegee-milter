@@ -287,6 +287,8 @@ mod_sieve_LTX_prdr_mod_init_rcpt (void* private)
   struct privdata *cont = (struct privdata*) private;
   struct sieve_local *dat = g_malloc0 (sizeof (struct sieve_local));
   dat->failed = 0;
+  dat->user = NULL;
+  dat->address = NULL;
   dat->desired_stages = MOD_RCPT;
   dat->hashTable   = g_hash_table_new_full (g_str_hash, g_str_equal,
 					    NULL, g_free);
@@ -315,6 +317,9 @@ mod_sieve_LTX_prdr_mod_destroy_rcpt (void* private)
   g_hash_table_destroy (dat->hashTable);
   if (dat->headers)
     g_free (dat->headers);
+  if (dat->user) free(dat->user);
+  if (dat->address) free(dat->address);
+
   g_free (dat);
   return 0;
 }
@@ -333,7 +338,7 @@ sieve_fileinto (sieve2_context_t *s, void *my)
     return SIEVE2_ERROR_FAIL;
   };
   char *fileinto = g_strconcat(prdr_get_recipient(cont), "+", sieve2_getvalue_string(s, "mailbox"), NULL);
-  prdr_add_recipient(cont, prdr_add_string(priv, fileinto));
+  prdr_add_recipient(cont, fileinto);
   g_free(fileinto);
   prdr_del_recipient(cont, prdr_get_recipient(cont));
   //end comment

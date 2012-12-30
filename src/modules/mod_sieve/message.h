@@ -14,6 +14,8 @@ struct sieve_local {
   mod_action_list_t *actions;
   mod_action_list_t *last_action;
   int failed;
+  char* user;
+  char* address;
 };
 
 /* message.h

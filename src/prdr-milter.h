@@ -70,12 +70,10 @@ int		prdr_sendmail(const char* from,
 			      const char* body,
 			      const char* date,
 			      const char* autosubmitted);
-char*		prdr_add_string		(struct privdata* const priv, const char* string);
 void* prdr_get_ctx(struct privdata* priv);
 const char* prdr_get_ehlohost(struct privdata* priv);
 const char* prdr_get_domain_name(struct privdata* priv);
 const char* prdr_get_queue_id(struct privdata* priv);
-const struct so_list* prdr_list_is_available (const char *listname);
 G_END_DECLS
  
 #endif /* PRDR_MILTER_H */

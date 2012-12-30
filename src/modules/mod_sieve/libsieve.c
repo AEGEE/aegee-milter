@@ -216,17 +216,20 @@ static int
 libsieve_getsubaddress (sieve2_context_t *s, void *my)
 {
   struct privdata *cont = (struct privdata*) my;
-  char *subaddr1 = prdr_add_string (my, sieve2_getvalue_string (s, "address"));
-  char *temp = strchr (subaddr1, '@');
+  struct sieve_local* dat = (struct sieve_local*) prdr_get_priv_rcpt (cont);
+  if (dat->address) g_free (dat->address);
+  if (dat->user) g_free(dat->user);
+  dat->user = strdup (sieve2_getvalue_string (s, "address"));
+  char *temp = strchr (dat->user, '@');
   if (temp == NULL)
     sieve2_setvalue_string (s, "domain", "");
   else {
     *temp = '\0';
     sieve2_setvalue_string (s, "domain", temp+1);//text after @
   }
-  sieve2_setvalue_string (s, "localpart", subaddr1);
+  sieve2_setvalue_string (s, "localpart", dat->address);
 
-  char* subaddr2 = prdr_add_string (cont, subaddr1);
+  dat->user = strdup (dat->address);
   temp = strchr (temp, '+');
   if (temp == NULL)
     sieve2_setvalue_string (s, "detail", "");
@@ -234,7 +237,7 @@ libsieve_getsubaddress (sieve2_context_t *s, void *my)
     *temp = '\0';
     sieve2_setvalue_string (s, "detail", temp+1);
   }
-  sieve2_setvalue_string (s, "user", subaddr2);
+  sieve2_setvalue_string (s, "user", dat->user);
   return SIEVE2_OK;
 }
 
