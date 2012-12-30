@@ -5,7 +5,8 @@ extern "C" {
 #include "src/prdr-list.h"
 #include "src/prdr-milter.h"
 }
-
+#include <map>
+#include <vector>
 extern int bounce_mode;
 extern std::vector<SoModule*> so_modules;
 extern std::vector<SoList*> so_lists;
@@ -416,15 +417,6 @@ normalize_email (struct privdata* priv, const char *email)
   *c= '\0';
   return k;
 }
-//-----------------------------------------------------------------------------
-
-const struct SoList*
-prdr_list_is_available (const char *listname)
-{
-  std::map<std::string, SoList*>::iterator it = tables.find (std::string (listname));
-  return (it == tables.end ()) ? NULL : it->second;
-}
-
 //-----------------------------------------------------------------------------
 
 int

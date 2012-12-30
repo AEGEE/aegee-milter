@@ -162,7 +162,7 @@ proceed_conf_file (const char* filename)
 						 "bounce-mode", NULL));
   if (temp == NULL) {
     //bounce mode not found, assuming pseudo-delayed if "delayed' is available, otherwise delayed
-    if (prdr_list_is_available ("delayed"))
+    if (tables.find("delayed") == tables.end())
       bounce_mode = 1;//pseudo-delayed
     else
       bounce_mode = 0;//delayed
@@ -170,7 +170,7 @@ proceed_conf_file (const char* filename)
     if (g_ascii_strcasecmp (temp, "delayed")== 0 ) bounce_mode = 0;
     else if (g_ascii_strcasecmp (temp, "pseudo-delayed")== 0) {
       bounce_mode = 1;
-      if (NULL != prdr_list_is_available ("delayed"))
+      if (tables.find("delayed") == tables.end())
 	g_printf ("bounce-mode set to delayed, but no list called `delayed` was exposed by a list module, in configuration file \"%s\"...\n", filename);
     } else if (g_ascii_strcasecmp (temp, "ndr")== 0) bounce_mode = 2;
     else if (g_ascii_strcasecmp (temp, "no-ndr")== 0) bounce_mode = 3;
