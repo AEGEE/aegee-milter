@@ -244,8 +244,8 @@ prdr_add_header (struct privdata* const priv,
     }
   }
   h = (struct header*)g_malloc (sizeof (struct header));
-  h->field = prdr_add_string (priv, field);
-  h->value = prdr_add_string (priv, value);
+  h->field = g_string_chunk_insert (priv->gstr, field);
+  h->value = g_string_chunk_insert (priv->gstr, value);
   h->status = index & 0x8F /*0111111b */;
   g_ptr_array_add (priv->current_recipient->current_module->msg->headers, h);
   //g_printf("prdr_add_header: headers nr: %i\r\n", priv->current_recipient->current_module->msg->headers->len);
@@ -258,7 +258,7 @@ prdr_del_header (struct privdata* const priv,
 		 const char* const field)
 {//last = 1, at the end, otherwise at the beginning
   struct header* h = (struct header*)g_malloc (sizeof(struct header));
-  h->field = prdr_add_string (priv, field);
+  h->field = g_string_chunk_insert (priv->gstr, field);
   h->status = (index & 0x8F) | 0xA0;
   if (priv->current_recipient->current_module->msg->headers == NULL)
     priv->current_recipient->current_module->msg->headers = g_ptr_array_new();
@@ -273,11 +273,11 @@ prdr_set_response (struct privdata *priv,
 		   const char *reason)
 {
   priv->current_recipient->current_module->return_reason =
-    reason ? prdr_add_string(priv, reason) : NULL;
+    reason ? g_string_chunk_insert (priv->gstr, reason) : NULL;
   priv->current_recipient->current_module->return_code =
-    code ? prdr_add_string(priv, code) : NULL;
+    code ? g_string_chunk_insert (priv->gstr, code) : NULL;
   priv->current_recipient->current_module->return_dsn =
-    dsn ? prdr_add_string(priv, dsn) : NULL;
+    dsn ? g_string_chunk_insert (priv->gstr, dsn) : NULL;
   switch (*code) {
   case '4': 
     priv->current_recipient->current_module->smfi_const = SMFIS_TEMPFAIL;
@@ -333,7 +333,7 @@ prdr_set_envsender (struct privdata* const priv, const char* const env)
     prdr_do_fail (priv);
   else
     priv->current_recipient->current_module->msg->envfrom =
-      prdr_add_string (priv, env);
+      g_string_chunk_insert (priv->gstr, env);
 };
 
 //-----------------------------------------------------------------------------
@@ -442,12 +442,6 @@ prdr_set_priv_msg (struct privdata* const priv, void* const user)
 }
 
 //-----------------------------------------------------------------------------
-char*
-prdr_add_string (struct privdata* const priv, const char* const string)
-{
-  return g_string_chunk_insert (priv->gstr, string);
-}
-
 char* get_date ()
 {
   static const char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",

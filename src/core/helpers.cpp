@@ -409,7 +409,7 @@ normalize_email (struct privdata* priv, const char *email)
   while (*email == ' ' || *email == '<')
     email++;
   //lowercase the characters
-  char *c = prdr_add_string (priv, email), *k = c;
+  char *c = g_string_chunk_insert (priv->gstr, email), *k = c;
   while (*c != '\0' && *c != ' ' && *c != '>' ) {
     *c = g_ascii_tolower (*c);
     c++;
