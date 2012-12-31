@@ -1,16 +1,12 @@
 #include "src/core/intern.hpp"
+#include "src/objects/AegeeMilter.hpp"
 extern "C" {
 #include <glib/gprintf.h>
 #include "config.h"
 #include "src/prdr-list.h"
 #include "src/prdr-milter.h"
 }
-#include <map>
-#include <vector>
 extern int bounce_mode;
-extern std::vector<SoModule*> so_modules;
-extern std::vector<SoList*> so_lists;
-extern std::map<std::string, SoList*> tables;
 
 HIDDEN void
 clear_ehlo (struct privdata *priv UNUSED)
@@ -71,8 +67,8 @@ clear_module_pool (struct privdata* priv)
   while (temp) {
     struct module *mod = (struct module*) temp->data;
     if (mod->private_)
-      for (i = 0; i < so_modules.size(); i++)
-	if (mod->so_mod == so_modules[i]) {
+      for (i = 0; i < AegeeMilter::so_modules.size(); i++)
+	if (mod->so_mod == AegeeMilter::so_modules[i]) {
 	  priv->current_recipient->current_module = mod;
 	  mod->so_mod->DestroyRcpt (priv);
 	  break;
@@ -97,9 +93,10 @@ clear_privdata (struct privdata* priv)
   clear_message (priv->msg);
   priv->msg = NULL;
   priv->stage = MOD_MAIL;
-  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+  for (priv->size = 0; priv->size < AegeeMilter::so_modules.size();
+       priv->size++)
     if (priv->msgpriv[priv->size]) {
-      so_modules[priv->size]->DestroyMsg (priv);
+      AegeeMilter::so_modules[priv->size]->DestroyMsg (priv);
       priv->msgpriv[priv->size] = NULL;
     }
   clear_recipients (priv);
@@ -212,10 +209,10 @@ set_responses (struct privdata* priv)
   for (j = 0; j < priv->recipients->len; j++) {
     priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients,j);
     m = 0;
-    for (k = 0; k < so_modules.size(); k++) {
+    for (k = 0; k < AegeeMilter::so_modules.size(); k++) {
       priv->current_recipient->current_module =
 	priv->current_recipient->modules[k];
-      if (prdr_get_activity(priv, so_modules[k]->GetName()) != 2
+      if (prdr_get_activity(priv, AegeeMilter::so_modules[k]->GetName()) != 2
 	  && priv->current_recipient->current_module->smfi_const
 	  != SMFIS_CONTINUE) {
 	m = priv->current_recipient->current_module->smfi_const;
@@ -233,7 +230,7 @@ set_responses (struct privdata* priv)
   //proceed global modules
 
   //add global headers
-  for (n = 0; n < so_modules.size(); n++)
+  for (n = 0; n < AegeeMilter::so_modules.size(); n++)
     compact_headers (priv, n);
   //add global recipients
   //proceed private modules
@@ -241,8 +238,8 @@ set_responses (struct privdata* priv)
   //add private recipients
   for (p = 0; p < priv->recipients->len; p++) {
     priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, p);
-    for (n = 0; n < so_modules.size(); n++)
-      if (prdr_get_activity (priv, so_modules[n]->GetName()) != 2) {
+    for (n = 0; n < AegeeMilter::so_modules.size(); n++)
+      if (prdr_get_activity (priv, AegeeMilter::so_modules[n]->GetName()) != 2) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[n];
 	const char** recipients = prdr_get_recipients (priv);
@@ -282,9 +279,9 @@ set_responses (struct privdata* priv)
       for (j = 1; j <= priv->recipients->len; j++) {
 	l = SMFIS_CONTINUE;
 	struct recipient *rec = g_ptr_array_index (priv->recipients, j-1);
-	for (k = 0; k < so_modules.size(); k++)
+	for (k = 0; k < AegeeMilter::so_modules.size(); k++)
 	  if (rec->modules[k]->smfi_const != SMFIS_CONTINUE
-	      && prdr_get_activity(priv, so_modules[k]->GetName()) !=2 ) {
+	      && prdr_get_activity(priv, AegeeMilter::so_modules[k]->GetName()) !=2 ) {
 	    l = rec->modules[k]->smfi_const;
 	    break;
 	}
@@ -319,7 +316,7 @@ set_responses (struct privdata* priv)
 	//check what the first recipient thinks
 	  j = 0;
 	  struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
-	  while (j < so_modules.size()) {
+	  while (j < AegeeMilter::so_modules.size()) {
 	    if (rec->modules[j]->smfi_const != SMFIS_CONTINUE) {
 	      inject_response (priv->ctx, rec->modules[j]->return_code,
 			       rec->modules[j]->return_dsn,
@@ -328,7 +325,7 @@ set_responses (struct privdata* priv)
 	    }
 	    j++;
 	  }
-	  if (j == so_modules.size() + 1)
+	  if (j == AegeeMilter::so_modules.size() + 1)
 	    inject_response (priv->ctx, "250", "2.1.5", "Message accepted");
 	  break;
         case '2': //NDR
@@ -358,20 +355,20 @@ apply_modules (struct privdata* priv)
   //g_printf ("***apply_modules %p***\n", priv);
   if (priv->current_recipient == NULL) return 0;
   //  char remaining_recipients = 1;
-  for (i = 0; i < so_modules.size(); i++) {
+  for (i = 0; i < AegeeMilter::so_modules.size(); i++) {
     priv->current_recipient->current_module =
       priv->current_recipient->modules[i];
 
-    if (so_modules[i]->Status (priv) & priv->stage  //module is subject to execution at this stage
+    if (AegeeMilter::so_modules[i]->Status (priv) & priv->stage  //module is subject to execution at this stage
 	//        remaining_recipients && //there are still recipients left
-	&& (2 != prdr_get_activity (priv, so_modules[i]->GetName())) //and module is active (=not yet disabled)
+	&& (2 != prdr_get_activity (priv, AegeeMilter::so_modules[i]->GetName())) //and module is active (=not yet disabled)
 	&& (priv->current_recipient->modules[i]->flags & priv->stage) == 0) {
       priv->current_recipient->current_module->flags |= priv->stage;
       priv->current_recipient->current_module->flags &= !MOD_FAILED;
 
       if (priv->stage == MOD_BODY)
 	smfi_progress (priv->ctx);//call this regularly
-      if (so_modules[i]->Run (priv)
+      if (AegeeMilter::so_modules[i]->Run (priv)
 	  || (priv->current_recipient->modules[i]->flags & MOD_FAILED)) { //module was executed with error
 	priv->current_recipient->current_module->return_reason = NULL;
 	priv->current_recipient->current_module->return_code = NULL;
@@ -426,22 +423,22 @@ prdr_list_insert (const char *table,
 		  const char *value,
 		  const unsigned int expire)
 {
-  return tables[table]->Insert (table, user, key, value, expire);
+  return AegeeMilter::tables[table]->Insert (table, user, key, value, expire);
 }
 //-----------------------------------------------------------------------------
 
 char*
 prdr_list_query (const char *table, const char *user, const char *key)
 {
-  return tables[table]->Query (table, user, key);
+  return AegeeMilter::tables[table]->Query (table, user, key);
 }
 //-----------------------------------------------------------------------------
 
 void
 prdr_list_expire ()
 {
-  for (std::vector<SoList*>::iterator it = so_lists.begin ();
-       it != so_lists.end (); it++)
+  for (std::vector<SoList*>::iterator it = AegeeMilter::so_lists.begin ();
+       it != AegeeMilter::so_lists.end (); it++)
     (*it)->Expire ();
 }
 //-----------------------------------------------------------------------------
@@ -449,5 +446,5 @@ prdr_list_expire ()
 int
 prdr_list_remove (const char *table, const char *user, const char *key)
 {
-  return tables[table]->Remove (table, user, key);
+  return AegeeMilter::tables[table]->Remove (table, user, key);
 }

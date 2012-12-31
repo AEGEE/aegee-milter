@@ -1,4 +1,5 @@
 #include "src/core/intern.hpp"
+#include "src/objects/AegeeMilter.hpp"
 
 #define MILTPRIV  struct privdata *priv = (struct privdata *) smfi_getpriv(ctx);
 extern "C" {
@@ -8,9 +9,7 @@ extern "C" {
 #include <glib/gprintf.h>
 #include "src/prdr-milter.h"
 }
-#include <vector>
 extern int bounce_mode;
-extern std::vector<SoModule*> so_modules;
 
 //-----------------------------------------------------------------------------
 static sfsistat
@@ -45,7 +44,7 @@ prdr_connect(SMFICTX *ctx,
   } else
       priv->hostaddr = NULL;
   priv->ctx = ctx;
-  priv->msgpriv = g_new0 (void *, so_modules.size());
+  priv->msgpriv = g_new0 (void *, AegeeMilter::so_modules.size());
   smfi_setpriv (ctx, priv);
   //printf("---prdr_connect %p---\n", ctx);
   return SMFIS_CONTINUE;
@@ -59,14 +58,14 @@ prdr_helo (SMFICTX *ctx, const char* helohost)
   MILTPRIV
   priv->ehlohost = g_string_chunk_insert (priv->gstr, helohost);
   priv->stage = MOD_EHLO;
-  for (priv->size = 0; priv->size < so_modules.size(); priv->size++) {
+  for (priv->size = 0; priv->size < AegeeMilter::so_modules.size(); priv->size++) {
     if (priv->msgpriv[priv->size]) {
-      so_modules[priv->size]->DestroyMsg (priv);
+      AegeeMilter::so_modules[priv->size]->DestroyMsg (priv);
       priv->msgpriv[priv->size] = NULL;
     }
-    so_modules[priv->size]->InitMsg (priv);
-    if (so_modules[priv->size]->Status (priv) & priv->stage)
-      so_modules[priv->size]->Run (priv);
+    AegeeMilter::so_modules[priv->size]->InitMsg (priv);
+    if (AegeeMilter::so_modules[priv->size]->Status (priv) & priv->stage)
+      AegeeMilter::so_modules[priv->size]->Run (priv);
   }
   priv->stage = MOD_MAIL;
   //printf("---prdr_helo %p, time=%li---\n", ctx, time(NULL));
@@ -89,12 +88,14 @@ prdr_envfrom (SMFICTX *ctx, char **argv)
 					  smfi_getsymval (ctx, "i"));
   if (priv->stage != MOD_MAIL) {
     priv->stage = MOD_MAIL;
-    for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
-	so_modules[priv->size]->InitMsg (priv);
+    for (priv->size = 0; priv->size < AegeeMilter::so_modules.size();
+	 priv->size++)
+      AegeeMilter::so_modules[priv->size]->InitMsg (priv);
   }
-  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
-    if (so_modules[priv->size]->Status (priv) & MOD_MAIL)
-      so_modules[priv->size]->Run (priv);
+  for (priv->size = 0; priv->size < AegeeMilter::so_modules.size();
+       priv->size++)
+    if (AegeeMilter::so_modules[priv->size]->Status (priv) & MOD_MAIL)
+      AegeeMilter::so_modules[priv->size]->Run (priv);
   priv->mime8bit = 0;
   int i = 1;
   priv->size = 0;
@@ -128,19 +129,19 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
   priv->current_recipient = (struct recipient*)g_malloc0 (sizeof (struct recipient));
   priv->current_recipient->address = normalize_email (priv, argv[0]);
   priv->current_recipient->modules = (struct module**)g_new0 (struct module*,
-							  so_modules.size());
+					      AegeeMilter::so_modules.size());
   unsigned int k = 1;
   unsigned int temp_size = priv->size;
   while (argv[k])
     if (g_ascii_strcasecmp (argv[k++], "NOTIFY=NEVER") == 0)
       priv->current_recipient->flags |= RCPT_NOTIFY_NEVER;
   int j;
-  for (k = 0; k < so_modules.size(); k++) {
+  for (k = 0; k < AegeeMilter::so_modules.size(); k++) {
     priv->stage = MOD_EHLO;
     priv->size = k;
     for (j = 0; j < (int)priv->recipients->len; j++) {
       struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, j);
-      if (so_modules[k]->Equal (priv, rec->address,
+      if (AegeeMilter::so_modules[k]->Equal (priv, rec->address,
 				priv->current_recipient->address)) {
 	priv->current_recipient->modules[k] = rec->modules[k];
 	j = -1;
@@ -152,16 +153,16 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     if (j != -1 || priv->recipients->len == 0) {
       //      printf ("===modules are not equal===\n");
       priv->current_recipient->modules[k] = (struct module*)g_malloc0 (sizeof (struct module));
-      priv->current_recipient->modules[k]->so_mod = so_modules[k];
+      priv->current_recipient->modules[k]->so_mod = AegeeMilter::so_modules[k];
       priv->current_recipient->modules[k]->msg = (struct message*)g_malloc0 (sizeof (struct message));
       priv->current_recipient->current_module =
 	priv->current_recipient->modules[k];
       //      priv->current_recipient->current_module->return_code = g_strdup ("250");
-      so_modules[k]->InitRcpt (priv);
+      AegeeMilter::so_modules[k]->InitRcpt (priv);
       priv->module_pool = g_slist_prepend (priv->module_pool,
 					   (gpointer)priv->current_recipient->modules[k]);
     }
-  }//for (i = 0; i < so_modules.size(); i++)
+  }//for (i = 0; i < AegeeMilter::so_modules.size(); i++)
   int i = apply_modules (priv);
   if (i > 0) {//some module rejected the message, without prior fails
     inject_response (priv->ctx,
@@ -177,7 +178,7 @@ prdr_envrcpt (SMFICTX *ctx, char **argv)
     j = SMFIS_CONTINUE;
     if (bounce_mode < 2 && priv->recipients->len > 0)
       //bounce mode is delayed, or pseudo-delayed, prdr is not supported and another recipient has been accepted so far
-      for (k = 0; k < so_modules.size(); k++) {
+      for (k = 0; k < AegeeMilter::so_modules.size(); k++) {
 	struct recipient *rec = (struct recipient*)g_ptr_array_index (priv->recipients, 0);
 	if ((rec->modules[k] != priv->current_recipient->modules[k])
 	    && ((priv->current_recipient->flags & RCPT_NOTIFY_NEVER) == 0) ) {
@@ -265,10 +266,10 @@ prdr_eoh (SMFICTX *ctx)
   if (j == 0) //no module failed, message accepted
     for (i = 0; i < priv->recipients->len; i++) {
       priv->current_recipient = (struct recipient*)g_ptr_array_index (priv->recipients, i);
-      for (k = 0; k < so_modules.size(); k++) {
+      for (k = 0; k < AegeeMilter::so_modules.size(); k++) {
 	priv->current_recipient->current_module =
 	  priv->current_recipient->modules[k];
-	if ((so_modules[k]->Status (priv) & MOD_BODY) &&
+	if ((AegeeMilter::so_modules[k]->Status (priv) & MOD_BODY) &&
 	    prdr_get_activity (priv,
 			       priv->current_recipient->current_module->so_mod->GetName ()) != 2) {
 	  j =-2;//no module failed but body needed
@@ -332,9 +333,10 @@ prdr_close (SMFICTX *ctx)
   if (priv == NULL || ctx == NULL) return SMFIS_CONTINUE;
   priv->stage = MOD_EHLO;
   clear_module_pool (priv);
-  for (priv->size = 0; priv->size < so_modules.size(); priv->size++)
+  for (priv->size = 0; priv->size < AegeeMilter::so_modules.size();
+       priv->size++)
     if (priv->msgpriv[priv->size]) {
-      so_modules[priv->size]->DestroyMsg (priv);
+      AegeeMilter::so_modules[priv->size]->DestroyMsg (priv);
     }
   if (priv->hostaddr) {
       g_free (priv->hostaddr);
