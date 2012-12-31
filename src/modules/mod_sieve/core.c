@@ -545,7 +545,7 @@ mod_sieve_LTX_prdr_mod_run (void *priv) {
   dat->last_action = dat->actions;
   //  int ret = libsieve_run(priv);
   int ret = libcyrus_sieve_run(priv);
-  if (!prdr_has_failed(priv)) {
+  if (dat->failed != 1) {
     mod_action_list_t *a = dat->actions;
     while (a != NULL) {
       switch (a->a) {
