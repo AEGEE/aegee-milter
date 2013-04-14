@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <features.h>
+#include <pthread.h>
 #include <sql.h>
 #include <sqlext.h>
 #include <string.h>
@@ -21,13 +22,13 @@ static char* sql_insert_expire = NULL;
 static char* sql_query = NULL;
 static char* sql_remove = NULL;
 static char* sql_expire = NULL;
-static GMutex* mutex;
+static pthread_mutex_t mutex;
 
 int
 list_odbc_LTX_load ()
 {
-  mutex = g_mutex_new ();
-  g_mutex_lock (mutex);
+  pthread_mutex_init(&mutex, NULL);
+  pthread_mutex_lock (&mutex);
   char* sql_create_table = NULL;
   char* sql_init = NULL;
   //which tables;
@@ -82,8 +83,8 @@ list_odbc_LTX_load ()
 	g_printf ("option %s in section [%s] is not recognized\n",
 		  array[i], prdr_section);
 	g_strfreev (array);
-	g_mutex_unlock (mutex);
-	g_mutex_free (mutex);
+	pthread_mutex_unlock (&mutex);
+	pthread_mutex_destroy (&mutex);
 	return -1;
       }
       i++;
@@ -114,8 +115,8 @@ list_odbc_LTX_load ()
     exported_tables = NULL;
     g_printf ("%s cannot connect to resourse DSN=%s, error=%i\n",
 	      prdr_section, dsn, ret);
-    g_mutex_unlock (mutex);
-    g_mutex_free (mutex);
+    pthread_mutex_unlock (&mutex);
+    pthread_mutex_destroy (&mutex);
     return -1;
   };
   //call initial SQL command
@@ -124,8 +125,8 @@ list_odbc_LTX_load ()
     ret = SQLExecDirect (stmt, sql_init, SQL_NTS);
     if (! SQL_SUCCEEDED (ret)) {
       g_printf ("Executing %s returned ODBC error code %i\n", sql_init, ret);
-      g_mutex_unlock (mutex);
-      g_mutex_free (mutex);
+      pthread_mutex_unlock (&mutex);
+      pthread_mutex_destroy (&mutex);
       return -1;
     }
     g_free (sql_init);
@@ -139,8 +140,8 @@ list_odbc_LTX_load ()
     if (! SQL_SUCCEEDED (ret)) {
       g_printf("Executing %s returned error code %i\n", query, ret);
       g_free(query);
-      g_mutex_unlock (mutex);
-      g_mutex_free (mutex);
+      pthread_mutex_unlock (&mutex);
+      pthread_mutex_destroy (&mutex);
       return -1;
     }
     g_free (query);
@@ -148,7 +149,7 @@ list_odbc_LTX_load ()
   if (sql_create_table) g_free (sql_create_table);
   g_free (database);
   g_free (dsn);
-  g_mutex_unlock (mutex);
+  pthread_mutex_unlock (&mutex);
   return 0;
 }
 
@@ -173,9 +174,9 @@ list_odbc_LTX_prdr_list_insert (const char* const table,
 		    + strlen (user) + strlen (key) + strlen (value) + 5);
     g_sprintf (sql, sql_insert_expire, table, expire, user, key, value);
   };
-  g_mutex_lock (mutex);
+  pthread_mutex_lock (&mutex);
   ret = SQLExecDirect (stmt, sql, SQL_NTS);
-  g_mutex_unlock (mutex);
+  pthread_mutex_unlock (&mutex);
   g_free (sql);
   return ret;
 }
@@ -192,14 +193,14 @@ list_odbc_LTX_prdr_list_expire ()
   if (sql_expire == NULL) return 0;
   int i = 0;
   SQLRETURN ret = 0;
-  g_mutex_lock (mutex);
+  pthread_mutex_lock (&mutex);
   while (exported_tables[i]) {
     char *sql = g_malloc (strlen (sql_expire) + strlen (exported_tables[i]));
     g_sprintf (sql, sql_expire, exported_tables[i++]);
     ret = SQLExecDirect (stmt, sql, SQL_NTS);
     g_free (sql);
   }
-  g_mutex_unlock (mutex);
+  pthread_mutex_unlock (&mutex);
   return ret;
 }
 
@@ -209,9 +210,9 @@ list_odbc_LTX_prdr_list_remove (const char* table, const char* user, const char*
   SQLRETURN ret;
   char *sql = g_malloc (strlen (table) + strlen (user) + strlen (key));
   g_sprintf (sql, sql_remove, table, user, key);
-  g_mutex_lock (mutex);
+  pthread_mutex_lock (&mutex);
   ret = SQLExecDirect (stmt, sql, SQL_NTS);
-  g_mutex_unlock (mutex);
+  pthread_mutex_unlock (&mutex);
   g_free (sql);
   return ret;
 }
@@ -219,9 +220,9 @@ list_odbc_LTX_prdr_list_remove (const char* table, const char* user, const char*
 char*
 list_odbc_LTX_unload ()
 {
-  g_mutex_lock (mutex);
-  g_mutex_unlock (mutex);
-  g_mutex_free (mutex);
+  pthread_mutex_lock (&mutex);
+  pthread_mutex_unlock (&mutex);
+  pthread_mutex_destroy (&mutex);
   SQLFreeHandle (SQL_HANDLE_STMT, stmt);
   SQLDisconnect (dbc);
   SQLFreeHandle (SQL_HANDLE_DBC, dbc);
