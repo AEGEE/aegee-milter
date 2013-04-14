@@ -16,6 +16,8 @@ public:
   int Insert (const char*, const char*, const char*, const char*, const unsigned int);
   char** Tables();
   ~SoList ();
+  SoList(const SoList&) =delete;
+  SoList operator=(const SoList&) =delete;
 private:
   lt_dlhandle mod;
   int   (*expire) ();

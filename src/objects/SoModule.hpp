@@ -18,6 +18,8 @@ public:
   int Equal (struct privdata* &, const char* &, const char* &);
   const char* GetName();
   ~SoModule();
+  SoModule(const SoModule&) = delete;
+  void operator=(const SoModule&) = delete;
 private:
   lt_dlhandle mod;
   const char * const name;
