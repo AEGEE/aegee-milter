@@ -1,15 +1,14 @@
-#include "src/objects/AegeeMilter.hpp"
-#include "src/core/intern.hpp"
-extern "C" {
+#include <iostream>
 #include <sys/stat.h>
-#include <signal.h>
-#include <glib/gprintf.h>
-#include <glib/gstdio.h>
-#include "src/prdr-milter.h"
-}
-//----------------------------------------------------------------------------
+#include <sys/types.h>
+#include <unistd.h>
 
-extern "C" struct smfiDesc smfilter;
+#include "src/core/AegeeMilter.hpp"
+extern "C" {
+  #include "libmilter/mfapi.h"
+  #include "src/prdr-milter.h"
+  extern struct smfiDesc smfilter;
+}
 
 int
 main (int argc, char **argv)
@@ -22,39 +21,40 @@ main (int argc, char **argv)
    */
   //  g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
 #define CONF_FILE "/aegee-milter.ini"
-  int i=0, c;
-  char *string = g_strconcat (SYSCONFDIR, CONF_FILE, NULL);
+  int c;
+  std::string str (SYSCONFDIR CONF_FILE);
   while ((c = getopt (argc, argv, "vhc:")) != -1)
     switch (c){
     case 'h':
-      g_printf ("aegee-milter 1.0\nCopyright (C) 2008 Dilyan Palauzov <dilyan.palauzov@aegee.org>\n\nUsage:\n -c file  : loads the configuration file. If the parameter is a directory, a file called aegee-milter.conf within it is opened\n -v  : show the version and exit\n -h  : print this help\n\n");
+      std::cout << "aegee-milter 1.0" << std::endl
+         << "Copyright (C) 2008-2013 Dilyan Palauzov <dilyan.palauzov@aegee.org>"
+         << std::endl << std::endl << "Usage:" << std::endl 
+         << " -c file  : loads the configuration file. If the parameter is a"
+         " directory, a file called aegee-milter.conf within it is opened"
+         << std::endl << "-v  : show the version and exit"
+         << std::endl << "-h  : print this help" << std::endl << std::endl;
       return -1;
     case 'v':
-      g_printf ("PRDR Milter 1.0, (C) 2007 Dilyan Palauzov\n\n");
+      std::cout << "PRDR Milter 1.0, (C) 2007-2013 Dilyan Palauzov"
+                << std::endl << std::endl;
       return -1;
     case 'c':
-      if (optarg == NULL || *optarg == '\0')
-	g_printf ("-c requires as parameter a configuration file or a directory containing %s\n", CONF_FILE);
-      struct stat *buf = (struct stat*)g_malloc (sizeof (struct stat));
-      if (stat (optarg, buf))
-	g_printf ("File %s does not exist.\n", optarg);
-      g_free(string);
-      if (S_ISDIR (buf->st_mode))
-	string = g_strconcat (optarg, CONF_FILE, NULL);
-      else {
-	string = optarg;
-	i = 1;
+      if (optarg == NULL || *optarg == '\0') {
+	std::cout << "-c requires as parameter a configuration file or a directory containing " << CONF_FILE << std::endl;
+	return -1;
       }
-      g_free (buf);
+      struct stat buf;
+      if (stat (optarg, &buf))
+	std::cout << "File " << std::string (optarg) << "does not exist." << std::endl;
+      str = *optarg;
+      if (S_ISDIR (buf.st_mode)) str += CONF_FILE;
     }
   if (smfi_register (smfilter) == MI_FAILURE)
-    g_printf ("smfi_register failed, most probably not enough memory\n");
-  if (aegeeMilter.ProceedConfFile (string) != 0) {
-    if (i != 1) g_free (string);
+    std::cout << "smfi_register failed, most probably not enough memory" << std::endl;
+  if (aegeeMilter.ProceedConfFile (str) != 0) {
     return -10;
   }
-  if (i != 1) g_free (string);
-  aegeeMilter.Fork();
+  //  aegeeMilter.Fork();
   smfi_main ();
   AegeeMilter::UnloadPlugins ();
   return 0;

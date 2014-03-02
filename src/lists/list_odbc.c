@@ -5,8 +5,6 @@
 #include <sqlext.h>
 #include <string.h>
 #include <glib.h>
-#include <glib/gstdio.h>
-#include "src/prdr-list.h"
 
 #define UNICODE 1
 extern GKeyFile* prdr_inifile;
@@ -182,7 +180,7 @@ list_odbc_LTX_prdr_list_insert (const char* const table,
 }
 
 void*
-list_odbc_LTX_prdr_list_query (const char* table UNUSED, const char *user UNUSED, const char *key UNUSED) {
+list_odbc_LTX_prdr_list_query (const char* table __attribute__((unused)), const char *user __attribute__((unused)), const char *key __attribute__((unused))) {
   //SELECT
   return NULL;
 }

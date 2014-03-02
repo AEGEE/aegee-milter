@@ -22,9 +22,9 @@ AH_BOTTOM([#if HAVE_VISIBILITY
 #define HIDDEN
 #endif])
 
-AC_LIBTOOL_DLOPEN
 LT_PREREQ([2.4.2])
 LT_INIT([disable-shared, dlopen])
+AC_SUBST([LIBTOOL_DEPS])
 LT_CONFIG_LTDL_DIR([libltdl])
 LTDL_INIT([nonrecursive])
 AC_CHECK_HEADERS_ONCE(signal.h, errno.h, sys/time.h, sys/stat.h, sys/types.h, libmilter/mfapi.h)
@@ -42,7 +42,7 @@ dnl PKG_CHECK_MODULES([libclamav], [libclamav >= 6:3:0], [check_libclamav=yes], 
 PKG_CHECK_MODULES([libiodbc], [libiodbc >= 3.52.7], [check_libiodbc=yes], [check_libiodbc=no])
 PKG_CHECK_MODULES([liblistserv], [liblistserv >= 0.1], [check_liblistserv=yes], [check_liblistserv=no])
 dnl AM_CONDITIONAL([MOD_CLAMAV], [test "$check_libclamav" = "yes"])
-AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes"])
+AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes_but_still_disable"])
 AM_CONDITIONAL([LIST_LISTSERV], [test "$check_liblistserv" = "yes"])
 
 PKG_CHECK_MODULES([libsieve], [libsieve >= 2.3], [check_libsieve=yes], [check_libsieve=no])
@@ -56,7 +56,7 @@ AM_CONDITIONAL([LIST_LOG], [true])
 #check_dns=no
 #AM_CONDITIONAL([LIST_DNS], [test "$check_dns" = "yes" ])
 # Checks for library functions.
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
 AC_HEADER_STDC
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS([config.h])

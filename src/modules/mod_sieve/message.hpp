@@ -1,22 +1,14 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
+extern "C" {
+  #include <glib.h>
+  #include <sieve2.h>
+}
+#include <map>
+#include <string>
+#include "src/core/Privdata.hpp"
 
-#include <glib.h>
-#include <sieve2.h>
-
-char *sieve_getscript (char const * const , char const * const, void *);
-typedef struct mod_sieve_Action mod_action_list_t;
-struct sieve_local {
-  GHashTable* hashTable;
-  const char **headers;
-  int desired_stages;
-  sieve2_context_t *sieve2_context;
-  mod_action_list_t *actions;
-  mod_action_list_t *last_action;
-  int failed;
-  char* user;
-  char* address;
-};
+const std::string& sieve_getscript (const std::string&, const std::string&, Privdata&);
 
 /* message.h
  * Larry Greenfield
@@ -64,16 +56,14 @@ struct sieve_local {
  */
 
 
-typedef enum {
-    ACTION_NULL = -1,
-    ACTION_NONE = 0,
+enum class mod_action_t {
     ACTION_REJECT,
     ACTION_FILEINTO,
     ACTION_KEEP,
     ACTION_REDIRECT,
     ACTION_DISCARD,
     ACTION_VACATION
-} mod_action_t;
+};
 
 
 typedef struct mod_sieve_vacation {
@@ -101,7 +91,7 @@ typedef struct mod_sieve_reject_context {
 } mod_sieve_reject_context_t;
 
 typedef struct mod_sieve_fileinto_context {
-    const char *mailbox;
+    char *mailbox;
 } mod_sieve_fileinto_context_t;
 
 #define SIEVE_HASHLEN 16
@@ -124,6 +114,8 @@ typedef struct mod_sieve_send_response_context {
 
    the do_action() functions should copy param */
 struct mod_sieve_Action {
+    mod_sieve_Action(mod_action_t, const char* = nullptr);
+    ~mod_sieve_Action();
     mod_action_t a;
     union {
 	mod_sieve_reject_context_t rej;
@@ -138,12 +130,24 @@ struct mod_sieve_Action {
 	    const char *flag;
 	} fla;
     } u;
-    int cancel_keep;
     char *param;		/* freed! */
     struct mod_sieve_Action *next;
     char *vac_subj;		/* freed! */
     char *vac_msg;
     int vac_days;
+};
+
+struct sieve_local final {
+  std::map<std::string, std::string> hashTable;//script_name: script_content
+  int desired_stages = MOD_RCPT;
+  sieve2_context_t *sieve2_context;
+  std::list<mod_sieve_Action> actions;
+  bool failed;
+  const char** headers = nullptr;
+  void delete_headers ();
+  std::string user;
+  std::string address;
+  ~sieve_local ();
 };
 
 #endif

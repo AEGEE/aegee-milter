@@ -1,3 +1,10 @@
+for each module, verify that:
+
+-- remove DOFAIL from the module API
+-- does not modify return_reason, return_code, return_dsn, msg.envrcpt, SMFI_CONST etc on fail.
+-- modify privdata to return fail, if some module failed and needs mod data/next stage
+
+
 aegee-prdr
 ==============================
 * mod_clamav
