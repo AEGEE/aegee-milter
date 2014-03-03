@@ -114,7 +114,7 @@ class arf final : public SoModule {
 	if (index != std::string::npos) {
 	  remove_email_from_list (original_recipient, std::string {sender_address, 0, index + 2}, body_text);
 	} else if (strcasestr (sender_address.c_str (), "aegee")) {
-	  sentmail_not_list_related (sender_address, original_recipient, body_text);
+	  sentmail_not_list_related (original_recipient, sender_address, body_text);
 	} else
 	  std::cout << "mor_arf:The impossible happened" << std::endl;
       }
