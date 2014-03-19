@@ -108,6 +108,20 @@ class _listserv final: public SoList {
     // printf("prdr_list_query table %s, user %s key %s\n", table, user, key);
     if (table == "listserv-check-subscriber")
       return listserv_check_subscriber (user, key);
+    listserv *l = listserv_init (email, password, host);
+    if (table == "listserv-get-sublists") {
+      char** res = listserv_getlist_keyword (l, user.c_str (), "Sub-lists");
+      std::string ret;
+      if (res[0] != NULL) {
+	for (unsigned int i = 0; res[i] != NULL; i++) {
+	  ret += res[i];
+	  ret.push_back (' ');
+	}
+	ret.resize (ret.size () - 1);
+      }
+      listserv_destroy (l);
+      return ret;
+    }
     std::string keyword, listname = user;
     size_t it = listname.find('|');
     if (it != std::string::npos) {
@@ -115,7 +129,6 @@ class _listserv final: public SoList {
       listname.resize (it);
     }
     std::set<std::string> emails, loop;
-    listserv *l = listserv_init (email, password, host);
     extract_emails_from (l, listname, keyword, emails, loop);
     listserv_destroy (l);
     if (key.empty ()) {
@@ -149,7 +162,7 @@ class _listserv final: public SoList {
   }
 
   std::vector<std::string> Tables () override {
-    return {"listserv", "listserv-check-subscriber"};
+    return {"listserv", "listserv-check-subscriber", "listserv-get-sublists"};
   }
 };
 
