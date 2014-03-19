@@ -80,14 +80,14 @@ class arf final : public SoModule {
   mutable std::mutex mutex;
  public:
   bool Run (Privdata& priv) const override {
-    const std::string& recipient = priv.GetRecipient();
-    if (priv.GetStage() & (MOD_RCPT | MOD_BODY)
+    const std::string& recipient = priv.GetRecipient ();
+    if (priv.GetStage () & (MOD_RCPT | MOD_BODY)
 	&& recipient != "arf+microsoft@aegee.org"
 	&& recipient != "arf@aegee.org"
 	&& recipient != "arf+scc_ms@aegee.org")
       return true;
 
-    if (priv.GetStage() & MOD_RCPT) {
+    if (priv.GetStage () & MOD_RCPT) {
       priv.DoFail();
       return false;
     }
