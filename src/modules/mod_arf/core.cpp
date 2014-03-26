@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 #include <ctype.h>
@@ -40,39 +41,121 @@ static void email_not_in_list (const std::string& email,
        "AEGEE Mail Team <mail@aegee.org>", "", rcpt, message, body_text);
 }
 
+//ret is the list of (sub)lists, where email is subscribed
 static void email_subscribed_to_list (const std::string& email,
-				     const std::string& list,
-				     const std::string& recipients,
-				     const std::string& body_text)
+				const std::string& list,
+				const std::list<std::string>& ret,
+				const std::string& recipients,
+				const std::string& body_text)
 {
   std::string temp;
   for (char it : list) temp += tolower (it);
-  const std::string message ="Hello,\r\n\r\nthe subscriber (in CC:) " + email + " has complained about an email received over the mailing list " + list + " (see attachment).  In turn, " + email + " was removed from " + list + ".\r\n\r\n"+ email + " can be subscribed again to the list, if the recipient promises not to mark anymore messages as spam, received over the AEGEE mail server.  In order to re-subscribe, go to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and Unsubscribe, or send an email to " + list + "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can re-subscribe the address as usual over the listserv web interface.";
+  std::string message ="Hello,\r\n\r\nthe subscriber (in CC:) " + email
+    + " has complained about an email received over the mailing list " + list
+    + " (see attachment).  In turn, " + email + " was removed from ";
+  if (ret.size () == 1) {
+    message += ret.front ();
+    if (ret.front () != list)
+      message += " (Sub-List of " + list + ")";
+    message  += ".\r\n\r\n"+ email + " can be subscribed again to the list";
+  } else {
+    for (const std::string it : ret)
+      message += it + ", ";
+    message.resize (message.size () - 2);
+    const size_t pos = message.find_last_of (',');
+    message[pos] = ' ';
+    message.insert (pos + 1, "and");
+    if (ret.front () == list)
+      message += " (Main list " + list + " and sub-list"
+	+ (ret.size() > 1 ? "s":"") + ")";
+    else {
+      message += ", sub-list";
+      if (ret.size () > 1) message +=" s";
+      message += " of " + list + ".  The subscription to the sub-lists implies"
+	" membership in the main list.";
+    }
+    message+= ".\r\n\r\n"+ email + " can be subscribed again to the lists";
+  }
+
+  message += ", if the recipient promises not to mark anymore messages as "
+    "spam,  received over the AEGEE mail server.  In order to re-subscribe, go"
+    " to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and "
+    " Unsubscribe, or send an email to " + list
+    + "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can "
+    "re-subscribe the address as usual over the listserv web interface.";
+  if (ret.size () > 1) {
+    message += "\r\n\r\nThe procedure to subscribe to the "
+      + std::string{ret.front () == list ? "sub-list" : "other sub-lists"}
+      + " is analogue.";
+  }
 
   std::vector<std::string> rcpts;
   int m = 0, recipients_length = recipients.length ();
   for (int i = 0; i < recipients_length; i++)
     if (recipients[i] == ',') {
-      rcpts.emplace_back (recipients.c_str () + m, i - m);
+      const std::string& temp {recipients.c_str () + m, (unsigned int)(i - m)};
+      //insert in rcpts only email addresses, which are not yet there
+      if (std::find(rcpts.begin(), rcpts.end(), temp) == rcpts.end())
+	rcpts.emplace_back (temp);
       m = i;
     }
   rcpts.emplace_back (recipients.c_str () + m);
   rcpts.emplace_back (email);
   rcpts.emplace_back ("mail@aegee.org");
+  std::string subject = "Removal of " + email + " from ";
+  std::string to;
+  if (ret.size() == 1) {
+    subject += ret.front();
+    to = "Listowners " + ret.front() + " <" + ret.front() + "-request@lists.aegee.org>";
+  } else {
+    for (const std::string& it : ret) {
+      subject += it + ", ";
+      to += "Listowners " + it + " <" + it + "-request@lists.aegee.org>, ";
+    }
+    subject.resize (subject.size() - 2);
+    to.resize (to.size() - 1);
+    size_t last_comma = subject.find_last_of (',');
+    subject[last_comma] = ' ';
+    subject.insert (last_comma+1, "and");
+  }
 
-  mmm ("Removal of " + email + " from " + list, "Listowners " + list + " <"
-       + list + "-request@lists.aegee.org>", email, rcpts, message, body_text);
+  mmm (subject, to, email, rcpts, message, body_text);
+}
+
+//retrieves the lists, out of the current list and all its sublists, where the address is subscribed
+static std::list<std::string> remove_email_from_list_deep (const std::string& email, const std::string& list) {
+  std::list<std::string> ret;
+  if (AegeeMilter::ListQuery ("listserv-check-subscriber", list, email)[0] == 'y') ret.push_back (list);
+
+  const std::string& sub_lists = AegeeMilter::ListQuery ("listserv-get-sublists", list, "");
+  if (!sub_lists.empty ()) {
+    size_t pos = 0;
+    do {
+      size_t pos_old = pos;
+      pos = sub_lists.find (' ', pos);
+      const std::string& sub = sub_lists.substr (pos_old, pos);
+      if (AegeeMilter::ListQuery ("listserv-check-subscriber", sub, email)[0] == 'y')
+	ret.push_back (std::move(sub));
+    } while (pos != std::string::npos && pos++);
+  }
+  return ret;
 }
 
 static void remove_email_from_list (const std::string& email,
 				    const std::string& list,
 				    const std::string& body_text) {
-  AegeeMilter::ListInsert ("log", "remove_email_from_list", "mod_arf_microsoft", "sender<" + email + ">listname<" + list + ">");
-  if (AegeeMilter::ListQuery ("listserv-check-subscriber", list, email)[0] == 'n')
+  AegeeMilter::ListInsert ("log", "remove_email_from_list", "mod_arf", "sender<" + email + ">listname<" + list + ">");
+  const std::list<std::string>& ret = remove_email_from_list_deep (email, list);
+  if (ret.empty ())
     email_not_in_list (email, list, body_text);
   else {
-    email_subscribed_to_list (email, list, AegeeMilter::ListQuery ("listserv", list + "|Owner", ""), body_text);
-    AegeeMilter::ListRemove ("listserv", list + " " + email, "q");
+    std::string recipients;
+    for (const std::string& s : ret) {
+      recipients += AegeeMilter::ListQuery ("listserv", s + "|Owner", "") + ',';
+      AegeeMilter::ListRemove ("listserv", s + " " + email, "q");
+    }
+    recipients.resize (recipients.size () - 1);
+    email_subscribed_to_list (email, list, ret, recipients, body_text);
   }
 }
 
