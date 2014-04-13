@@ -33,8 +33,8 @@ public:
       file = fopen (filename, "a");
       free (filename);
       if (file) {
-	fprintf (file, "Timestamp           User     Module     Message\n");
-	fprintf (file, "================================================================\n");
+	fputs ("Timestamp           User     Module     Message\n", file);
+	fputs ("================================================================\n", file);
 
 	time_t _time = time (NULL);
 	struct tm lt;
