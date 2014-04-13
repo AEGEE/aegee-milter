@@ -40,6 +40,10 @@ Privdata::~Privdata() {
   ClearModules ();
   free (msgpriv);
   free (hostaddr);
+  if (gMimeParser)
+    g_object_unref (gMimeParser);
+  if (gByteArray)
+    g_byte_array_free (gByteArray, 1);
 }
 
 void Privdata::InitModules () {
@@ -167,7 +171,23 @@ void Privdata::SetResponse (const std::string& code /*5xx*/,
   };
 }
 
-int Privdata::GetSize () {
+GMimeParser* Privdata::GetGMimeParser () {
+  if (stage != MOD_BODY) {
+    DoFail ();
+    return nullptr;
+  }
+  if (!gMimeParser) {
+    GMimeStream* gMimeStream =
+      g_mime_stream_mem_new_with_byte_array (gByteArray);
+    g_mime_stream_mem_set_owner ((GMimeStreamMem*)gMimeStream, FALSE);
+    gMimeParser = g_mime_parser_new_with_stream (gMimeStream);
+    g_mime_parser_set_respect_content_length (gMimeParser, TRUE);
+    g_object_unref (gMimeStream);
+  }
+  return gMimeParser;
+}
+
+unsigned int Privdata::GetSize () {
   if (stage != MOD_BODY) {
     if (!size) DoFail();
     return size;

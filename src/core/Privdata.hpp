@@ -3,6 +3,8 @@
 
 #include <list>
 #include <string>
+#include <glib.h>
+#include <gmime/gmime.h>
 #include "src/prdr-milter.h"
 #include "src/core/Module.hpp"
 #include "src/core/Recipient.hpp"
@@ -14,10 +16,12 @@ extern "C" {
 
 //functions that can be used in the prdr modules, apart from the ones included in prdr-list.h
 class Privdata final {
-  unsigned int size;
   bool mime8bit;
   void CompactHeaders (unsigned int);
 public:
+  GByteArray *gByteArray = nullptr;
+  GMimeParser* gMimeParser = nullptr;
+  unsigned int size;
   Privdata (SMFICTX *ctx, const std::string& hostname,
            const std::string& domain_name, struct sockaddr *hostaddr);
   ~Privdata ();
@@ -35,7 +39,7 @@ public:
   void AddHeader (const unsigned char index, const char* const field, const char* const value);
   void DelHeader (const unsigned char, const char* const);//last = 1, at the end, otherwise at the beginning
   const std::vector<std::tuple<std::string, std::string, uint8_t>>& GetHeaders();
-  int GetSize ();
+  unsigned int GetSize ();
   void SetEnvSender (const std::string& env);
   const std::string& GetEnvSender ();
   const std::string& GetBody ();
@@ -46,6 +50,7 @@ public:
   void SetPrivMsg (void* const);
   void ProceedMailFromParams (char** argv);
   int SetResponses ();
+  GMimeParser* GetGMimeParser();
   bool operator()(Recipient*);
   SMFICTX *ctx;
   const std::string hostname;

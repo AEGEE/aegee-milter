@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <iostream>
+#include <cstring>
 #include "src/core/AegeeMilter.hpp"
 #include "src/core/Privdata.hpp"
 
@@ -40,10 +40,21 @@ prdr_envfrom (SMFICTX *ctx, char **argv)
     priv.recipients.clear ();
     priv.stage = MOD_MAIL;
     priv.InitModules ();
+    if (priv.gMimeParser) {
+      g_object_unref (priv.gMimeParser);
+      priv.gMimeParser = nullptr;
+    }
+    if (priv.gByteArray) {
+      g_byte_array_free (priv.gByteArray, 1);
+      priv.gByteArray = nullptr;
+    }
   }
   priv.ProceedMailFromParams (argv);
   priv.RunModules ();
   priv.stage = MOD_RCPT;
+  if (!priv.gByteArray)
+    priv.gByteArray = priv.size ? g_byte_array_sized_new (priv.size)
+                           : g_byte_array_new ();
   return SMFIS_CONTINUE;
 }
 
@@ -101,6 +112,15 @@ static sfsistat
 prdr_header (SMFICTX *ctx, char* headerf, char* headerv)
 {
   Privdata& priv = *(Privdata*) smfi_getpriv (ctx);
+  g_byte_array_append (priv.gByteArray,
+		reinterpret_cast<const guint8*>(headerf), strlen (headerf));
+  g_byte_array_append (priv.gByteArray,
+		reinterpret_cast<const guint8*>(": "), 2);
+  g_byte_array_append (priv.gByteArray,
+		reinterpret_cast<const guint8*>(headerv), strlen (headerv));
+  g_byte_array_append (priv.gByteArray,
+		reinterpret_cast<const guint8*>("\r\n"), 2);
+
   if (priv.msg.AddHeader (headerf, headerv))
     return SMFIS_CONTINUE;
   else {
@@ -114,6 +134,7 @@ static sfsistat
 prdr_eoh (SMFICTX *ctx)
 {
   Privdata& priv = *(Privdata*) smfi_getpriv (ctx);
+  g_byte_array_append (priv.gByteArray, reinterpret_cast<const guint8*>("\r\n"), 2);
   priv.stage = MOD_HEADERS;
   try {
     for (Recipient& rec : priv.recipients)
@@ -147,6 +168,7 @@ prdr_body (SMFICTX *ctx, unsigned char* bodyp, const size_t len)
 {
   if (len == 0) return SMFIS_CONTINUE;
   Privdata& priv = *(Privdata*) smfi_getpriv (ctx);
+  g_byte_array_append (priv.gByteArray, bodyp, len);
   if (priv.msg.envfrom.empty ())
     return SMFIS_SKIP;
   priv.msg.body.append ((char*)bodyp, len);

@@ -38,6 +38,7 @@ dnl AC_CHECK_LIB([pthread],[])
 AC_TYPE_SIZE_T
 PKG_PROG_PKG_CONFIG(0.25)
 PKG_CHECK_MODULES([glib], [glib-2.0 >= 2.28.1], [check_glib=yes], [check_glib=no])
+PKG_CHECK_MODULES([gmime], [gmime-2.6 >= 2.6.20], [check_gmime=yes], [check_gmime=no])
 dnl PKG_CHECK_MODULES([libclamav], [libclamav >= 6:3:0], [check_libclamav=yes], [check_libclamav=no])
 PKG_CHECK_MODULES([libiodbc], [libiodbc >= 3.52.7], [check_libiodbc=yes], [check_libiodbc=no])
 PKG_CHECK_MODULES([liblistserv], [liblistserv >= 0.1], [check_liblistserv=yes], [check_liblistserv=no])

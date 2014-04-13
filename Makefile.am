@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=-I m4
 AM_LDFLAGS= ${CFLAG_VISIBILITY}
 EXTRA_DIST = contrib/sm8.14.3-prdr.diff
 AM_CPPFLAGS =
-AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS}
+AM_CFLAGS = -Wall -Wextra ${glib_CFLAGS} ${libiodbc_CFLAGS} -DSYSCONFDIR='"${sysconfdir}"' ${LTDLINCL} ${liblistserv_CFLAGS} ${libsieve_CFLAGS} ${libcyrus_sieve_CFLAGS} ${gmime_CFLAGS}
 AM_CXXFLAGS = ${AM_CFLAGS} -std=gnu++11
 
 pkglib_LTLIBRARIES = 
@@ -31,7 +31,7 @@ aegee_milter_SOURCES = src/prdr-milter.h src/prdr-list.h \
 	src/core/Recipient.cpp src/core/Recipient.hpp \
 	src/core/SoList.cpp src/core/SoList.hpp \
 	src/core/SoModule.cpp src/core/SoModule.hpp
-aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL) -lmilter
+aegee_milter_LDFLAGS = ${glib_LIBS} $(LIBLTDL) -lmilter ${gmime_LIBS}
 aegee_milter_LDADD =
 # LISTS
 
@@ -86,9 +86,9 @@ src_lists_list_timsieved_scripts_la_LDFLAGS = -module -avoid-version -no-undefin
 src_lists_list_timsieved_scripts_la_LIBADD = ${glib_LIBS}
 src_lists_list_timsieved_scripts_la_SOURCES = src/lists/list_timsieved_scripts.cpp
 
-src_modules_mod_arf_la_SOURCES = src/modules/mod_arf/core.cpp src/modules/mod_arf/microsoft.cpp
 src_modules_mod_arf_la_LDFLAGS = -module -avoid-version -static
-src_modules_mod_arf_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS}
+src_modules_mod_arf_la_LIBADD = ${liblistserv_LIBS} ${glib_LIBS} ${gmime_LIBS}
+src_modules_mod_arf_la_SOURCES = src/modules/mod_arf.cpp
 
 src_modules_mod_block_sender_la_LDFLAGS = -module -avoid-version -static
 src_modules_mod_block_sender_la_SOURCES = src/modules/mod_block_sender.cpp

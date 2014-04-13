@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <gmime/gmime.h>
 
 #include "src/core/AegeeMilter.hpp"
 extern "C" {
@@ -57,5 +58,6 @@ main (int argc, char **argv)
   //  aegeeMilter.Fork();
   smfi_main ();
   AegeeMilter::UnloadPlugins ();
+  g_mime_shutdown ();
   return 0;
 }

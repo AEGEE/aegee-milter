@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <gmime/gmime.h>
 #include <unistd.h>
 #include "src/core/AegeeMilter.hpp"
 
@@ -43,6 +44,7 @@ catch_signal (int sig)
       std::cout << "SIGTERM" << std::endl;
       smfi_stop ();
       AegeeMilter::UnloadPlugins ();
+      g_mime_shutdown ();
       break;
     case SIGINT:
       std::cout << "SIGINT" << std::endl;;
@@ -61,6 +63,7 @@ catch_signal (int sig)
 }
 
 AegeeMilter::AegeeMilter() {
+  g_mime_init (0);
   lt_dlpreload_default (lt_preloaded_symbols);
 }
 
@@ -271,6 +274,10 @@ static std::string get_date ()
   return date;
 }
 
+const std::string& AegeeMilter::Sendmail () {
+  return sendmail;
+}
+
 //return values: != 0 is error, == 0 is OK
 int AegeeMilter::Sendmail (const std::string& from,
 			   const std::vector<std::string>& rcpt,
@@ -285,7 +292,7 @@ int AegeeMilter::Sendmail (const std::string& from,
     fprintf (sm, "%s: %s\r\n", date.c_str (), get_date ().c_str ());
     if (!autosubmitted.empty ())
       fprintf (sm, "Auto-Submitted: %s\r\n", autosubmitted.c_str ());
-    fprintf (sm, "%s", body.c_str ());
+    fputs (body.c_str(), sm);
     return pclose (sm);
   } else
     return -1;

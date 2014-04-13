@@ -30,4 +30,5 @@ public:
 		       const std::string& body,
 		       const std::string& date,
 		       const std::string& autosubmitted);
+  static const std::string& Sendmail ();
 };

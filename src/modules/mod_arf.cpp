@@ -7,25 +7,65 @@
 #include "src/core/AegeeMilter.hpp"
 #include "src/core/Privdata.hpp"
 
-extern std::string ms_get_original_recipient (const std::string&);
-extern std::string ms_get_sender_address (const std::string&);
+enum class FORMAT : char {Microsoft, Yahoo};
 
 static void mmm (const std::string& subject, const std::string& to,
 		 const std::string& cc, const std::vector<std::string>& rcpt,
-		 const std::string& message, const std::string& body_text) {
-  std::string str {"MIME-Version: 1.0\r\nFrom: AEGEE Abuse Reporting <mail@aegee.org>\r\nSubject: " + subject + "\r\nTo: " + to + "\r\n"};
-  if (!cc.empty()) str += "CC: " + cc + "\r\n";
-  const char* const boundary_begin = std::strstr (body_text.c_str(), "--") + 2;
-  const std::string boundary {boundary_begin, static_cast<long unsigned int>(std::strchr (boundary_begin, '\r') - boundary_begin)};
-  str += "Content-Type:  multipart/mixed; boundary=\"" + boundary + "\"\r\n\r\n\r\n--" + boundary + "\r\nContent-Type: text/plain\r\n\r\n" + message + "\r\n\r\nKind regards\r\n  Your AEGEE Mail Team\r\n\r\n  http://mail.aegee.org\r\n  https://lists.aegee.org\r\n  email:mail@aegee.org\r\n  sip:8372@aegee.prg\r\n  +49 176 9265 6190(m)\r\n  +49 911 1313 7989\r\n" + body_text;
-  AegeeMilter::Sendmail ("mail@aegee.org", rcpt, str, "Date", "auto-generated");
+		 const std::string& message, GMimeObject* body_text) {
+  //begin constructing first mime part
+  const std::string& real_message = message + "\r\n\r\nKind regards\r\n  Your "
+    "AEGEE Mail Team\r\n\r\n  http://mail.aegee.org\r\n  "
+    "https://lists.aegee.org\r\n  email:mail@aegee.org\r\n  "
+    "sip:8372@aegee.prg\r\n  +49 176 9265 6190(m)\r\n  +49 911 1313 7989\r\n";
+
+  GMimeStream* gMimeStreamMem = g_mime_stream_mem_new_with_buffer
+    (real_message.c_str (), real_message.size ());
+
+  GMimeDataWrapper* gMimeDataWrapper = g_mime_data_wrapper_new_with_stream
+    (gMimeStreamMem, GMIME_CONTENT_ENCODING_8BIT);
+  g_object_unref (gMimeStreamMem);
+
+  GMimePart* gMimePart = g_mime_part_new_with_type ("text", "plain");
+  g_mime_part_set_content_object (gMimePart, gMimeDataWrapper);
+  g_object_unref (gMimeDataWrapper);
+  //end constructing first mime part
+
+  GMimeMultipart* gMimeMultipart = g_mime_multipart_new_with_subtype ("mixed");
+  g_mime_multipart_set_boundary (gMimeMultipart, NULL);
+  g_mime_multipart_add (gMimeMultipart, (GMimeObject*)gMimePart);
+  g_mime_multipart_add (gMimeMultipart, body_text);
+  g_object_unref (gMimePart);
+
+  GMimeMessage* gMimeMessage = g_mime_message_new (FALSE);
+  g_mime_message_set_sender (gMimeMessage, "AEGEE Abuse Reporting <mail@aegee.org>");
+  g_mime_message_set_subject (gMimeMessage, subject.c_str ());
+  g_mime_message_set_date (gMimeMessage, time (NULL), 0);
+  g_mime_message_add_recipient (gMimeMessage, GMIME_RECIPIENT_TYPE_TO, NULL, to.c_str ());
+  if (!cc.empty()) g_mime_message_add_recipient
+	     (gMimeMessage, GMIME_RECIPIENT_TYPE_CC, NULL, cc.c_str ());
+
+  g_mime_object_append_header ((GMimeObject*)gMimeMessage,
+			       "Auto-generated", "auto-submitted");
+  g_mime_message_set_mime_part (gMimeMessage, (GMimeObject*)gMimeMultipart);
+  g_object_unref(gMimeMultipart);
+
+  std::string cmdline = AegeeMilter::Sendmail() + " -fmail@aegee.org";
+  for (const std::string& it : rcpt) cmdline += " " + it;
+
+  FILE *sm = popen (cmdline.c_str (), "w");
+  GMimeStream* sendmail_pipe = g_mime_stream_file_new (sm);
+  g_mime_stream_file_set_owner ((GMimeStreamFile*)sendmail_pipe, FALSE);
+  g_mime_object_write_to_stream ((GMimeObject*) gMimeMessage, sendmail_pipe);
+  pclose (sm);
+  g_object_unref (gMimeMessage);
+  g_object_unref (sendmail_pipe);
 }
 
-static std::vector<std::string> rcpt { "mail@aegee.org" };
+static const std::vector<std::string> rcpt { "mail@aegee.org" };
 
 static void sentmail_not_list_related (const std::string& email,
 				      const std::string& via,
-				      const std::string& body_text)
+				      GMimeObject* body_text)
 {
   const std::string message = "Hello Mail Team,\r\n\r\nthere was a complaint about an email sent to " + email + " via \"" + via + "\". However \"" + via + "\" is not an AEGEE Mailing list.  Please check the attached message (backup of it is available in the arf@aegee.org mailbox) and try to avoid such complaints in the future.";
   mmm (email + " sent from " + via,
@@ -34,7 +74,7 @@ static void sentmail_not_list_related (const std::string& email,
 
 static void email_not_in_list (const std::string& email,
 			      const std::string& list,
-			      const std::string& body_text)
+			      GMimeObject* body_text)
 {
   const std::string message = "Hello Mail Team,\r\n\r\nthe attached email to address " + email + " was sent via the mailing list " + list + ", but the email address is currently not subscribed to " + list + ". Please check what is wrong with the email address/list subscription.  There is a copy of the complaint in the arf@aegee.org mailbox.";
   mmm (email + " not in " + list,
@@ -46,7 +86,7 @@ static void email_subscribed_to_list (const std::string& email,
 				const std::string& list,
 				const std::list<std::string>& ret,
 				const std::string& recipients,
-				const std::string& body_text)
+				GMimeObject* body_text)
 {
   std::string temp;
   for (char it : list) temp += tolower (it);
@@ -79,7 +119,7 @@ static void email_subscribed_to_list (const std::string& email,
 
   message += ", if the recipient promises not to mark anymore messages as "
     "spam,  received over the AEGEE mail server.  In order to re-subscribe, go"
-    " to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and "
+    " to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and"
     " Unsubscribe, or send an email to " + list
     + "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can "
     "re-subscribe the address as usual over the listserv web interface.";
@@ -143,7 +183,7 @@ static std::list<std::string> remove_email_from_list_deep (const std::string& em
 
 static void remove_email_from_list (const std::string& email,
 				    const std::string& list,
-				    const std::string& body_text) {
+				    GMimeObject* body_text) {
   AegeeMilter::ListInsert ("log", "remove_email_from_list", "mod_arf", "sender<" + email + ">listname<" + list + ">");
   const std::list<std::string>& ret = remove_email_from_list_deep (email, list);
   if (ret.empty ())
@@ -176,31 +216,71 @@ class arf final : public SoModule {
     }
 
     if (priv.GetStage () & MOD_BODY) {
-      int format; //1 - microsoft, 2 - yahoo
-      if (recipient == "arf+microsoft@aegee.org")
-	format = 1;
+      FORMAT format;
+      if (recipient == "arf+microsoft@aegee.org"
+	  && priv.GetEnvSender() == "staff@hotmail.com")
+	format = FORMAT::Microsoft;
       else if (recipient == "arf@aegee.org"
-	       && priv.GetEnvSender () == "arf=aegee.org@returns.bulk.yahoo.com")
-	format = 2;
+	       && priv.GetEnvSender ().find ("arf=aegee.org@returns.bulk.yahoo.com") != std::string::npos)
+	format = FORMAT::Yahoo;
       else return false;
-      if (format != 1) return true;
-      const std::string& body_text = priv.GetBody ();
+      GMimeMessage* gMimeMessage = g_mime_parser_construct_message (priv.GetGMimeParser ());
+      GMimeMultipart* gMimeMultipart =
+	(GMimeMultipart*)gMimeMessage->mime_part;
 
-      const std::string& original_recipient = (format == 1) ? ms_get_original_recipient (body_text) : "";
-      const std::string& sender_address = (format == 1) ? ms_get_sender_address (body_text) : "";
-      //here comes address parsing, so only the real email address is left
-      //MS sends the pure address, so no parsing is necessary
-      //    printf("mod arf, format=%i, recipient %s, sender %s\n", format, original_recipient, sender_address);
+      std::string original_recipient;
+      std::string sender_address;
+      GMimeObject* original_message;
+      char *temp;
+
+      switch (format) {
+      case FORMAT::Microsoft:
+	{
+	original_message = g_mime_multipart_get_part (gMimeMultipart, 0);
+	GMimeObject* nested_message = (GMimeObject*)g_mime_message_part_get_message ((GMimeMessagePart*)original_message);
+	original_recipient = g_mime_object_get_header
+	  (nested_message, "X-HmXmrOriginalRecipient");
+	sender_address = g_mime_object_get_header
+	  (nested_message, "Return-Path");
+	break;
+	}
+      case FORMAT::Yahoo:
+	GMimeObject* feedback_report = g_mime_multipart_get_part
+	  (gMimeMultipart, 1);
+	char* x = g_mime_object_to_string (feedback_report);
+	temp = strstr (x, "\r\nOriginal-Mail-From: ");
+	sender_address = {temp + 22, static_cast<long unsigned int>(strchr(temp + 22, '\r') - temp - 22)};
+	temp = strstr (x, "\r\nOriginal-Rcpt-To: ");
+	original_recipient = std::string {temp + 20, static_cast<long unsigned int>(strchr(temp + 20, '\r') - temp - 20)};
+	original_message = g_mime_multipart_get_part (gMimeMultipart, 2);
+	g_free (x);
+	break;
+      }
+
+      sender_address = AegeeMilter::NormalizeEmail (sender_address);
+      std::transform (sender_address.begin(), sender_address.end(), sender_address.begin(), ::toupper);
+      if (!sender_address.find("OWNER-"))
+	sender_address.erase (0, 6);
+      //remove text from the first * until the @
+      const size_t asterisk = sender_address.find('*');
+      if (asterisk != std::string::npos)
+	sender_address.erase (asterisk, sender_address.find('@', asterisk + 1) - asterisk);
+
       if (!original_recipient.empty () && !sender_address.empty ()) {
 	size_t index = sender_address.find ("-L@LISTS.AEGEE.ORG");
 	std::lock_guard<std::mutex> lg (mutex);
 	if (index != std::string::npos) {
-	  remove_email_from_list (original_recipient, std::string {sender_address, 0, index + 2}, body_text);
+	  remove_email_from_list (original_recipient, std::string {sender_address, 0, index + 2}, original_message);
 	} else if (strcasestr (sender_address.c_str (), "aegee")) {
-	  sentmail_not_list_related (original_recipient, sender_address, body_text);
+	  sentmail_not_list_related (original_recipient, sender_address, original_message);
 	} else
-	  std::cout << "mor_arf:The impossible happened" << std::endl;
+	  std::cout << time (NULL)
+		    << " mod_arf:The impossible happened, sender={"
+		    <<  sender_address << "}, recipient={"
+		    << original_recipient << "}" << std::endl;
       }
+
+      g_object_unref (gMimeMessage);
     }
     return true;
   }
