@@ -1,5 +1,4 @@
 #define __USE_GNU 1
-#include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -127,19 +126,17 @@ substitute_named_variable (Privdata& priv, const std::string& variable)
 static std::string
 expand_variables_in_string (Privdata& cont, const std::string& input)
 {
-  const int len = input.size ();
-  std::string ret;
-  for (int j = 0; j < len; j++)
-    if (input[j] == '$' && input[j + 1] == '{') {
-      size_t k = input.find_first_of ("${}", j + 2);
-      if (input[k] == '}') {
-	ret += /* variable value */ substitute_named_variable (cont,
-		/* variable name */ {input, static_cast<long unsigned int>(j + 2), k - j - 2});
-	j = k;
-      } else
-	ret += input[j];
-    } else
-      ret += input[j];
+  std::string ret = input;
+  size_t pos = 0;
+  while (pos != std::string::npos) {
+    pos = ret.find("${", pos);
+    if (pos != std::string::npos) {
+      const size_t end = ret.find("}", pos + 2);
+      if (end != std::string::npos)
+	ret.replace (pos, end - pos + 1, substitute_named_variable (cont, {ret, pos + 2, end - pos - 2}));
+      else break;
+    }
+  }
   return ret;
 }
 
