@@ -16,7 +16,7 @@ static void mmm (const std::string& subject, const std::string& to,
   const std::string& real_message = message + "\r\n\r\nKind regards\r\n  Your "
     "AEGEE Mail Team\r\n\r\n  http://mail.aegee.org\r\n  "
     "https://lists.aegee.org\r\n  email:mail@aegee.org\r\n  "
-    "sip:8372@aegee.prg\r\n  +49 176 9265 6190(m)\r\n  +49 911 1313 7989\r\n";
+    "sip:8372@aegee.prg\r\n  +49 176 4171 0724(m)\r\n  +49 911 1313 7989\r\n";
 
   GMimeStream* gMimeStreamMem = g_mime_stream_mem_new_with_buffer
     (real_message.c_str (), real_message.size ());
