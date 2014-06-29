@@ -89,7 +89,7 @@ int AegeeMilter::LoadPlugins() {
   std::string g_mods {"Loaded modules:"};
   std::string g_lists {"Loaded lists (with tables):"};
   while (lt_preloaded_symbols[j].name) {
-  if (lt_preloaded_symbols[j++].address) continue;
+    if (lt_preloaded_symbols[j++].address) continue;
     prdr_section = lt_preloaded_symbols[j-1].name;
     prdr_section.resize(prdr_section.find('.'));
     char ** array = g_key_file_get_keys (prdr_inifile, prdr_section.c_str(),
