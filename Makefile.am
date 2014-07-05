@@ -52,6 +52,11 @@ aegee_milter_LDADD += -dlpreopen src/lists/list_log.la
 pkglib_LTLIBRARIES += src/lists/list_log.la
 endif
 
+if LIST_MEMCACHED
+aegee_milter_LDADD += -dlpreopen src/lists/list_memcached.la
+pkglib_LTLIBRARIES += src/lists/list_memcached.la
+endif
+
 if LIST_ODBC
 aegee_milter_LDADD += -dlpreopen src/lists/list_odbc.la
 pkglib_LTLIBRARIES += src/lists/list_odbc.la
@@ -78,6 +83,10 @@ src_lists_list_listserv_la_SOURCES = src/lists/list_listserv.cpp
 src_lists_list_log_la_LDFLAGS = -module -avoid-version -no-undefined -static
 src_lists_list_log_la_LIBADD = ${glib_LIBS} ${libiodbc_LIBS}
 src_lists_list_log_la_SOURCES = src/lists/list_log.cpp
+
+src_lists_list_memcached_la_LDFLAGS = -module -avoid-version -no-undefined -static
+src_lists_list_memcached_la_LIBADD = ${libmemcached_LIBS}
+src_lists_list_memcached_la_SOURCES = src/lists/list_memcached.cpp
 
 src_lists_list_odbc_la_LIBADD = ${glib_LIBS} ${libiodbc_LIBS}
 src_lists_list_odbc_la_LDFLAGS = -module -avoid-version -no-undefined -static

@@ -45,7 +45,8 @@ PKG_CHECK_MODULES([liblistserv], [liblistserv >= 0.1], [check_liblistserv=yes], 
 dnl AM_CONDITIONAL([MOD_CLAMAV], [test "$check_libclamav" = "yes"])
 AM_CONDITIONAL([LIST_ODBC], [test "$check_libiodbc" = "yes_but_still_disable"])
 AM_CONDITIONAL([LIST_LISTSERV], [test "$check_liblistserv" = "yes"])
-
+PKG_CHECK_MODULES([libmemcached], [libmemcached >= 1.0.18], [check_memcached=yes], [check_memcached=no])
+AM_CONDITIONAL([LIST_MEMCACHED], [test "$check_memcached" = "yes"])
 PKG_CHECK_MODULES([libsieve], [libsieve >= 2.3], [check_libsieve=yes], [check_libsieve=no])
 AM_CONDITIONAL([MOD_LIBSIEVE], [test "$check_libsieve" = "yes"])
 PKG_CHECK_MODULES([libcyrus_sieve], [libcyrus_sieve >= 2.5], [check_libcyrus_sieve=yes], [check_libcyrus_sieve=no])
@@ -72,6 +73,7 @@ echo "
 
           conditionally built lists:
             list_listserv:           $check_liblistserv
+            list_memcached:          $check_memcached
             list_odbc:               $check_libiodbc
 
           modules built by default:
