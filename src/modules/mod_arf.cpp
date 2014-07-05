@@ -265,10 +265,16 @@ class arf final : public SoModule {
       const size_t asterisk = sender_address.find('*');
       if (asterisk != std::string::npos)
 	sender_address.erase (asterisk, sender_address.find('@', asterisk + 1) - asterisk);
+      std::lock_guard<std::mutex> lg (mutex);
+      const std::string& q = AegeeMilter::ListQuery("memcached", sender_address, original_recipient);
+      AegeeMilter::ListInsert ("memcached", sender_address, original_recipient, "");
+      if (!q.empty ()) {
+        g_object_unref (gMimeMessage);
+        return true;
+      }
 
       if (!original_recipient.empty () && !sender_address.empty ()) {
 	size_t index = sender_address.find ("-L@LISTS.AEGEE.ORG");
-	std::lock_guard<std::mutex> lg (mutex);
 	if (index != std::string::npos) {
 	  remove_email_from_list (original_recipient, std::string {sender_address, 0, index + 2}, original_message);
 	} else if (strcasestr (sender_address.c_str (), "aegee")) {
