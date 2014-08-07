@@ -37,7 +37,7 @@ static void mmm (const std::string& subject, const std::string& to,
   g_object_unref (gMimePart);
 
   GMimeMessage* gMimeMessage = g_mime_message_new (FALSE);
-  g_mime_message_set_sender (gMimeMessage, "AEGEE Abuse Reporting <mail@aegee.org>");
+  g_mime_message_set_sender (gMimeMessage, "AEGEE Mail (unsubscribe) <mail@aegee.org>");
   g_mime_message_set_subject (gMimeMessage, subject.c_str ());
   g_mime_message_set_date (gMimeMessage, time (NULL), 0);
   g_mime_message_add_recipient (gMimeMessage, GMIME_RECIPIENT_TYPE_TO, NULL, to.c_str ());
@@ -193,6 +193,7 @@ static void remove_email_from_list (const std::string& email,
     for (const std::string& s : ret) {
       recipients += AegeeMilter::ListQuery ("listserv", s + "|Owner", "") + ',';
       AegeeMilter::ListRemove ("listserv", s + " " + email, "q");
+      AegeeMilter::ListInsert ("memcached", s + "@LISTS.AEGEE.ORG", email, "");
     }
     recipients.resize (recipients.size () - 1);
     email_subscribed_to_list (email, list, ret, recipients, body_text);
@@ -267,7 +268,6 @@ class arf final : public SoModule {
 	sender_address.erase (asterisk, sender_address.find('@', asterisk + 1) - asterisk);
       std::lock_guard<std::mutex> lg (mutex);
       const std::string& q = AegeeMilter::ListQuery("memcached", sender_address, original_recipient);
-      AegeeMilter::ListInsert ("memcached", sender_address, original_recipient, "");
       if (!q.empty ()) {
         g_object_unref (gMimeMessage);
         return true;
