@@ -91,8 +91,8 @@ static void email_subscribed_to_list (const std::string& email,
   std::string temp;
   for (char it : list) temp += tolower (it);
   std::string message ="Hello,\r\n\r\nthe subscriber (in CC:) " + email
-    + " has complained about an email received over the mailing list " + list
-    + " (see attachment).  In turn, " + email + " was removed from ";
+    + " has marked an email received over the mailing list " + list
+    + " as spam (see attachment).  In turn, " + email + " was removed from ";
   if (ret.size () == 1) {
     message += ret.front ();
     if (ret.front () != list)
@@ -121,7 +121,10 @@ static void email_subscribed_to_list (const std::string& email,
     "spam,  received over the AEGEE mail server.  In order to re-subscribe, go"
     " to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and"
     " Unsubscribe, or send an email to " + list
-    + "-subscribe-request@lists.aegee.org.\r\n\r\nThe listowner can "
+    + "-subscribe-request@lists.aegee.org.\r\n\r\nThe subscriber must mark "
+    "all messages from its spam folder, which were marked as spam, as "
+    "non-spam, so that future emails received over the same mailing list do "
+    "not end automatically in the spam folder.\r\n\r\nThe listowner can "
     "re-subscribe the address as usual over the listserv web interface.";
   if (ret.size () > 1) {
     message += "\r\n\r\nThe procedure to subscribe to the "
