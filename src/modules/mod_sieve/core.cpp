@@ -25,8 +25,8 @@ int libcyrus_sieve_run (Privdata&);
 //sieve_global.hashTable maps [scriptname:global scope] -> scriptcode
 //sieve_global.recipients maps [recipient] maps the default script of the recipient, recipients[:global] is the global default script
 struct sieve_global {
-  std::map<std::string, std::string> hashTable;
-  std::map<std::string, std::string> recipients;//default scripts for the recipients
+  std::unordered_map<std::string, std::string> hashTable;
+  std::unordered_map<std::string, std::string> recipients;//default scripts for the recipients
 };
 
 HIDDEN

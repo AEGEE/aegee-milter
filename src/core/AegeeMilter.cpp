@@ -26,7 +26,7 @@ static int alarm_period;
 
 std::vector<std::unique_ptr<SoModule, void(*)(SoModule*)>> AegeeMilter::so_modules;
 std::vector<std::unique_ptr<SoList, void(*)(SoList*)>> AegeeMilter::so_lists;
-std::map<std::string, SoList*> AegeeMilter::tables;
+std::unordered_map<std::string, SoList*> AegeeMilter::tables;
 
 static void
 catch_signal (int sig)

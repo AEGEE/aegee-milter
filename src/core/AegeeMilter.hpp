@@ -1,6 +1,6 @@
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "src/core/SoList.hpp"
 #include "src/core/SoModule.hpp"
@@ -10,7 +10,7 @@ class AegeeMilter final {
 public:
   static std::vector<std::unique_ptr<SoModule, void(*)(SoModule*)>> so_modules;
   static std::vector<std::unique_ptr<SoList, void(*)(SoList*)>> so_lists;
-  static std::map<std::string, SoList*> tables;
+  static std::unordered_map<std::string, SoList*> tables;
   static std::string ListQuery (const std::string& table,
 				const std::string& user,
 				const std::string& key);

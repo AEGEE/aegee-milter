@@ -4,8 +4,8 @@ extern "C" {
   #include <glib.h>
   #include <sieve2.h>
 }
-#include <map>
 #include <string>
+#include <unordered_map>
 #include "src/core/Privdata.hpp"
 
 const std::string& sieve_getscript (const std::string&, const std::string&, Privdata&);
@@ -138,7 +138,7 @@ struct mod_sieve_Action {
 };
 
 struct sieve_local final {
-  std::map<std::string, std::string> hashTable;//script_name: script_content
+  std::unordered_map<std::string, std::string> hashTable;//script_name: script_content
   int desired_stages = MOD_RCPT;
   sieve2_context_t *sieve2_context;
   std::list<mod_sieve_Action> actions;
