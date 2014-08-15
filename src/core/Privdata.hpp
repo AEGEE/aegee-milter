@@ -67,6 +67,7 @@ public:
   Module* current_module;
   std::list<Module> module_pool;
   bool prdr_supported; //logically ORed MSG_ flags
+  bool replace_from_header = false;
   int InjectResponse(const std::string&, const std::string&,
 		     const std::string&);
 };

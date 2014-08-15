@@ -116,6 +116,10 @@ prdr_header (SMFICTX *ctx, char* headerf, char* headerv)
 		reinterpret_cast<const guint8*>(headerf), strlen (headerf));
   g_byte_array_append (priv.gByteArray,
 		reinterpret_cast<const guint8*>(": "), 2);
+  if (!strcmp(headerf, "From") && !strcmp(headerv, "Mail Delivery System <Mailer-Daemon@>")) {
+    priv.replace_from_header = true;
+    headerf = (char*)"Mail Delivery System <Mailer-Daemon@mail.AEGEE.ORG>";
+  }
   g_byte_array_append (priv.gByteArray,
 		reinterpret_cast<const guint8*>(headerv), strlen (headerv));
   g_byte_array_append (priv.gByteArray,
@@ -180,6 +184,9 @@ prdr_eom (SMFICTX *ctx)
 {
   Privdata& priv = *(Privdata*) smfi_getpriv (ctx);
   priv.stage = MOD_BODY;
+  if (priv.replace_from_header)
+    smfi_chgheader (ctx, (char*)"From", 1, (char*)"Mail Delivery System <Mailer-Daemon@mail.AEGEE.ORG>");
+
   for (Recipient& rec : priv.recipients)
     priv (&rec);
   return priv.SetResponses ();
