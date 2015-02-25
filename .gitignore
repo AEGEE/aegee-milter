@@ -8,6 +8,7 @@ Makefile.in
 Makefile
 aclocal.m4
 autom4te.cache/
+aegee-milter
 ar-lib
 compile
 config.guess
