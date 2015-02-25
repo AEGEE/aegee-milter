@@ -118,7 +118,7 @@ static void email_subscribed_to_list (const std::string& email,
   }
 
   message += ", if the recipient promises not to mark anymore messages as "
-    "spam,  received over the AEGEE mail server.  In order to re-subscribe, go"
+    "spam, received over the AEGEE mail server.  In order to re-subscribe, go"
     " to https://lists.aegee.org/" + temp + " -> (on the right) Subscribe and"
     " Unsubscribe, or send an email to " + list
     + "-subscribe-request@lists.aegee.org.\r\n\r\nThe subscriber must mark "
