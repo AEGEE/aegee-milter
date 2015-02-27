@@ -23,7 +23,7 @@ struct via final : public SoModule {
   bool Run (Privdata& priv) const override {
     const std::vector<std::string>& received = priv.GetHeader ("Received");
     if (!received.empty()) {
-      std::string ip = received_via (received.front ());
+      const std::string ip = received_via (received.front ());
       if (!ip.empty ())
 	AegeeMilter::ListInsert ("log", priv.GetRecipient (), "mod_via", ip);
     }
