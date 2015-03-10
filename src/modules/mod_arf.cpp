@@ -110,7 +110,7 @@ static void email_subscribed_to_list (const std::string& email,
 	+ (ret.size() > 1 ? "s":"") + ")";
     else {
       message += ", sub-list";
-      if (ret.size () > 1) message +=" s";
+      if (ret.size () > 1) message +="s";
       message += " of " + list + ".  The subscription to the sub-lists implies"
 	" membership in the main list.";
     }
