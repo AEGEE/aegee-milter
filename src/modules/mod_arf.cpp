@@ -176,7 +176,7 @@ static std::list<std::string> remove_email_from_list_deep (const std::string& em
     do {
       size_t pos_old = pos;
       pos = sub_lists.find (' ', pos);
-      const std::string& sub = sub_lists.substr (pos_old, pos);
+      const std::string& sub = sub_lists.substr (pos_old, pos - pos_old);
       if (AegeeMilter::ListQuery ("listserv-check-subscriber", sub, email)[0] == 'y')
 	ret.push_back (std::move(sub));
     } while (pos != std::string::npos && pos++);
