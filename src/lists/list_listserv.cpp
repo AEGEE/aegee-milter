@@ -131,6 +131,7 @@ class _listserv final: public SoList {
     std::set<std::string> emails, loop;
     extract_emails_from (l, listname, keyword, emails, loop);
     listserv_destroy (l);
+    if (emails.empty()) return "";
     if (key.empty ()) {
       std::string ret;
       for (const std::string& it : emails)
